@@ -1,7 +1,7 @@
 import Order from '../models/order.model.js';
+import Table from '../models/table.model.js';
 export const createOrder = async (req, res) => {
   try {
-
     const {
       customerName = "Guest",
       items,
@@ -13,12 +13,11 @@ export const createOrder = async (req, res) => {
       subtotal,
     } = req.body;
 
-    // Validate required fields
+    // Basic validations
     if (!items || items.length === 0) {
       return res.status(400).json({ message: 'No order items' });
     }
 
-    // Item validation
     for (let item of items) {
       if (!item.name || typeof item.name !== 'string') {
         return res.status(400).json({ message: `Item name is required and should be a string` });
@@ -31,24 +30,34 @@ export const createOrder = async (req, res) => {
       }
     }
 
-    // Order type specific validation
-    if (orderType === 'dine-in' && !tableNumber) {
-      return res.status(400).json({ message: 'Table number is required for dine-in' });
+    if (orderType === 'dine-in') {
+      if (!tableNumber) {
+        return res.status(400).json({ message: 'Table number is required for dine-in' });
+      }
+
+      // Check if table exists and is not already booked
+      const table = await Table.findOne({ tableNumber });
+
+      if (!table) {
+        return res.status(404).json({ message: `Table number ${tableNumber} not found` });
+      }
+
+      if (table.isBooked) {
+        return res.status(400).json({ message: `Table number ${tableNumber} is already booked` });
+      }
     }
 
     if (orderType === 'delivery' && !deliveryAddress) {
       return res.status(400).json({ message: 'Delivery address is required' });
     }
 
-    // Payment method validation
     if (!paymentMethod || !['counter', 'card'].includes(paymentMethod)) {
       return res.status(400).json({ message: 'Invalid payment method' });
     }
 
-    // Calculate subtotal if not provided
     const calculatedSubtotal = subtotal || items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-    // Create order
+    // Create new order
     const order = new Order({
       customerName,
       items,
@@ -61,22 +70,35 @@ export const createOrder = async (req, res) => {
     });
 
     const createdOrder = await order.save();
+
+    // If dine-in, update the table
+    if (orderType === 'dine-in') {
+      await Table.findOneAndUpdate(
+        { tableNumber },
+        {
+          isBooked: true,
+          currentOrderId: createdOrder._id,
+        },
+        { new: true }
+      );
+    }
+
     return res.status(201).json(createdOrder);
 
   } catch (error) {
     console.error("Error while creating order:", error);
-    
+
     if (error.name === 'ValidationError') {
       const errors = {};
       Object.keys(error.errors).forEach(key => {
         errors[key] = error.errors[key].message;
       });
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: 'Validation failed',
-        errors 
+        errors
       });
     }
-    
+
     res.status(500).json({ message: 'Server Error' });
   }
 };
@@ -95,6 +117,26 @@ export const getAllOrders = async (req, res) => {
   }
 };
 
+export const addItemToOrder = async (req, res) => {
+  const { orderId } = req.params;
+  const { newItems } = req.body;
+
+  try {
+    const order = await Order.findById(orderId);
+    if (!order || order.status === "completed") {
+      return res.status(400).json({ message: "Order not found or already completed." });
+    }
+
+    order.items.push(...newItems);
+    order.total += newItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    await order.save();
+
+    res.status(200).json(order);
+  } catch (err) {
+    console.error("Error updating order:", err);
+    res.status(500).json({ message: "Failed to update order" });
+  }
+};
 
 export const getFilteredOrders = async (req, res) => {
   try {
@@ -150,7 +192,6 @@ export const getFilteredOrders = async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 };
-
 
 export const updateOrderStatus = async (req, res) => {
   try {

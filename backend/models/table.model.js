@@ -15,6 +15,13 @@ const tableSchema = new mongoose.Schema({
     ref: "Order",
     default: null,
   },
+  qrUrl: {
+    type: String, 
+  },
+  qrImage: {
+    url: String,
+    public_id: String,
+  },
 });
 
 const Table = mongoose.model("Table", tableSchema);

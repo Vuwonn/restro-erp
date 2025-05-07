@@ -24,6 +24,8 @@ import Settings from "./pages/admin/sidebarpage/Settings";
 import AddMenuItem from "./pages/admin/menu/AddMenuItem";
 import GuestOrder from "./components/custumer/GuestOrderPage";
 import MenuPage from "./pages/admin/sidebarpage/Menu";
+import GuestOrderPage from "./components/custumer/GuestOrderPage";
+import GuestUserDashboard from "./pages/user/GuestUserDashboard";
 
 function App() {
   return (
@@ -33,7 +35,11 @@ function App() {
         {/* User Panel - No Authentication Needed */}
         <Route path="/" element={<UserDashboard />} />
 
+        {/* <Route path="/order" element={<GuestOrder />} /> */}
         <Route path="/guest-order" element={<GuestOrder />} />
+        <Route path="/guest-checkout" element={<GuestOrderPage />} />
+        <Route path="/order" element={<GuestUserDashboard />} />
+
 
         {/* Cook Panel - Protected Routes */}
         <Route
