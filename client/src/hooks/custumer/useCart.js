@@ -1,71 +1,60 @@
-// hooks/customer/useCart.js
-import { setOrderItems } from '@/redux/orderSlice';
-import { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+// hooks/custumer/useCart.js
+import { useSelector, useDispatch } from "react-redux";
+import {
+  setOrderItems,
+  updateItemQuantity,
+  removeItem,
+} from "@/redux/cartSlice";
 
 const useCart = () => {
   const dispatch = useDispatch();
-  const { items: cartItems } = useSelector(state => state.order);
-  
-  const [isCartOpen, setIsCartOpen] = useState(false);
-
-  // Calculate derived values
-  const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
-  const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const cartState = useSelector((state) => state.cart);
 
   const addToCart = (item) => {
-    const existingItem = cartItems.find(cartItem => cartItem.id === item.id);
-    
-    if (existingItem) {
-      updateQuantity(item.id, existingItem.quantity + 1);
-    } else {
-      const newCart = [...cartItems, { ...item, quantity: 1 }];
-      dispatch(setOrderItems({ items: newCart, subtotal: subtotal + item.price, totalItems: totalItems + 1 }));
-    }
-  };
-
-  const removeFromCart = (itemId) => {
-    const itemToRemove = cartItems.find(item => item.id === itemId);
-    if (!itemToRemove) return;
-    
-    const newCart = cartItems.filter(item => item.id !== itemId);
-    dispatch(setOrderItems({ 
-      items: newCart, 
-      subtotal: subtotal - (itemToRemove.price * itemToRemove.quantity),
-      totalItems: totalItems - itemToRemove.quantity
-    }));
-  };
-
-  const updateQuantity = (itemId, newQuantity) => {
-    if (newQuantity < 1) {
-      removeFromCart(itemId);
-      return;
-    }
-
-    const itemToUpdate = cartItems.find(item => item.id === itemId);
-    if (!itemToUpdate) return;
-
-    const updatedCart = cartItems.map(item => 
-      item.id === itemId ? { ...item, quantity: newQuantity } : item
+    dispatch(
+      setOrderItems({
+        items: [...cartState.items, item],
+        subtotal: cartState.subtotal + item.price * item.quantity,
+        totalItems: cartState.totalItems + item.quantity,
+        isCartOpen: true,
+      })
     );
+  };
 
-    const quantityDiff = newQuantity - itemToUpdate.quantity;
-    dispatch(setOrderItems({
-      items: updatedCart,
-      subtotal: subtotal + (itemToUpdate.price * quantityDiff),
-      totalItems: totalItems + quantityDiff
-    }));
+  const updateQuantity = (cartItemId, quantity) => {
+    if (quantity <= 0) {
+      dispatch(removeItem({ cartItemId }));
+    } else {
+      dispatch(updateItemQuantity({ cartItemId, quantity }));
+    }
+  };
+
+  const removeFromCart = (cartItemId) => {
+    dispatch(removeItem({ cartItemId }));
+  };
+
+  const clearCart = () => {
+    dispatch(
+      setOrderItems({
+        items: [],
+        subtotal: 0,
+        totalItems: 0,
+        isCartOpen: false,
+      })
+    );
   };
 
   return {
-    cart: cartItems,
-    isCartOpen,
-    setIsCartOpen,
+    cart: cartState.items,
+    isCartOpen: cartState.isCartOpen,
+    setIsCartOpen: (value) =>
+      dispatch(setOrderItems({ ...cartState, isCartOpen: value })),
     addToCart,
     removeFromCart,
     updateQuantity,
-    totalItems,
-    subtotal
+    totalItems: cartState.totalItems,
+    subtotal: cartState.subtotal,
+    clearCart,
   };
 };
 

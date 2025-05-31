@@ -1,5 +1,6 @@
 import Order from '../models/order.model.js';
 import Table from '../models/table.model.js';
+
 export const createOrder = async (req, res) => {
   try {
     const {
@@ -35,16 +36,30 @@ export const createOrder = async (req, res) => {
         return res.status(400).json({ message: 'Table number is required for dine-in' });
       }
 
-      // Check if table exists and is not already booked
+      // Check if table exists
       const table = await Table.findOne({ tableNumber });
-
       if (!table) {
         return res.status(404).json({ message: `Table number ${tableNumber} not found` });
       }
 
-      if (table.isBooked) {
-        return res.status(400).json({ message: `Table number ${tableNumber} is already booked` });
-      }
+      // Check for active orders (pending or in-progress) for the table
+      const activeOrder = await Order.findOne({
+        tableNumber,
+        orderType: 'dine-in',
+        status: { $in: ['pending', 'in-progress'] },
+      });
+
+      // if (activeOrder) {
+      //   return res.status(400).json({
+      //     message: `An active order (ID: ${activeOrder._id}) exists for table ${tableNumber}. Add items to the existing order.`,
+      //     orderId: activeOrder._id,
+      //   });
+      // }
+
+      // Check if table is booked (should be false since no active order)
+      // if (table.isBooked) {
+      //   return res.status(400).json({ message: `Table number ${tableNumber} is already booked` });
+      // }
     }
 
     if (orderType === 'delivery' && !deliveryAddress) {
@@ -76,7 +91,7 @@ export const createOrder = async (req, res) => {
       await Table.findOneAndUpdate(
         { tableNumber },
         {
-          isBooked: true,
+          isBooked: ['pending', 'in-progress'].includes(createdOrder.status),
           currentOrderId: createdOrder._id,
         },
         { new: true }
@@ -84,7 +99,6 @@ export const createOrder = async (req, res) => {
     }
 
     return res.status(201).json(createdOrder);
-
   } catch (error) {
     console.error("Error while creating order:", error);
 
@@ -102,7 +116,7 @@ export const createOrder = async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 };
-  
+
 export const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find();
@@ -119,54 +133,93 @@ export const getAllOrders = async (req, res) => {
 
 export const addItemToOrder = async (req, res) => {
   const { orderId } = req.params;
-  const { newItems } = req.body;
+  const { newItems, tableNumber } = req.body;
 
   try {
-    const order = await Order.findById(orderId);
-    if (!order || order.status === "completed") {
-      return res.status(400).json({ message: "Order not found or already completed." });
+    // Validate new items
+    if (!newItems || !Array.isArray(newItems) || newItems.length === 0) {
+      return res.status(400).json({ message: 'No new items provided' });
     }
 
-    order.items.push(...newItems);
-    order.total += newItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    await order.save();
+    for (let item of newItems) {
+      if (!item.name || typeof item.name !== 'string') {
+        return res.status(400).json({ message: `Item name is required and should be a string` });
+      }
+      if (typeof item.quantity !== 'number' || item.quantity <= 0) {
+        return res.status(400).json({ message: `Item quantity must be a positive number` });
+      }
+      if (typeof item.price !== 'number' || item.price <= 0) {
+        return res.status(400).json({ message: `Item price must be a positive number` });
+      }
+    }
 
-    res.status(200).json(order);
-  } catch (err) {
-    console.error("Error updating order:", err);
-    res.status(500).json({ message: "Failed to update order" });
+    // Find the order
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    // Check if order is active
+    if (!['pending', 'in-progress'].includes(order.status)) {
+      return res.status(400).json({ message: 'Cannot add items to a completed, cancelled, or delivered order' });
+    }
+
+    // Verify tableNumber for dine-in orders
+    if (order.orderType === 'dine-in') {
+      if (!tableNumber || order.tableNumber !== tableNumber) {
+        return res.status(400).json({ message: 'Table number mismatch or not provided' });
+      }
+
+      // Check if table is booked and linked to this order
+      const table = await Table.findOne({ tableNumber });
+      if (!table) {
+        return res.status(404).json({ message: `Table number ${tableNumber} not found` });
+      }
+      if (!table.isBooked || table.currentOrderId.toString() !== orderId) {
+        return res.status(400).json({ message: 'Table is not booked for this order' });
+      }
+    }
+
+    // Add new items and update subtotal
+    order.items.push(...newItems);
+    order.subtotal += newItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const updatedOrder = await order.save();
+
+    res.status(200).json(updatedOrder);
+  } catch (error) {
+    console.error("Error updating order:", error);
+    res.status(500).json({ message: 'Server Error' });
   }
 };
 
 export const getFilteredOrders = async (req, res) => {
   try {
-    const { filter } = req.query; 
+    const { filter } = req.query;
 
     let startDate;
-    const endDate = new Date(); 
+    const endDate = new Date();
 
     switch (filter) {
       case 'daily':
         startDate = new Date();
-        startDate.setHours(0, 0, 0, 0); 
+        startDate.setHours(0, 0, 0, 0);
         break;
       case 'weekly':
         startDate = new Date();
-        const dayOfWeek = startDate.getDay(); 
-        startDate.setDate(startDate.getDate() - dayOfWeek); 
+        const dayOfWeek = startDate.getDay();
+        startDate.setDate(startDate.getDate() - dayOfWeek);
         startDate.setHours(0, 0, 0, 0);
         break;
       case 'monthly':
         startDate = new Date();
-        startDate.setDate(1); 
+        startDate.setDate(1);
         startDate.setHours(0, 0, 0, 0);
         break;
       case 'yearly':
-        startDate = new Date(startDate.getFullYear(), 0, 1); 
+        startDate = new Date(startDate.getFullYear(), 0, 1);
         startDate.setHours(0, 0, 0, 0);
         break;
       default:
-        
         const allOrders = await Order.find().sort({ createdAt: -1 });
         return res.status(200).json({
           totalOrders: allOrders.length,
@@ -195,8 +248,8 @@ export const getFilteredOrders = async (req, res) => {
 
 export const updateOrderStatus = async (req, res) => {
   try {
-    const { id } = req.params; 
-    const { status } = req.body; 
+    const { id } = req.params;
+    const { status } = req.body;
 
     // Validate status
     const allowedStatuses = ["pending", "in-progress", "completed", "cancelled", "delivered"];
@@ -204,15 +257,32 @@ export const updateOrderStatus = async (req, res) => {
       return res.status(400).json({ message: "Invalid status value." });
     }
 
-  
-    const updatedOrder = await Order.findByIdAndUpdate(
-      id,
-      { status },
-      { new: true } 
-    );
-
-    if (!updatedOrder) {
+    // Find the order
+    const order = await Order.findById(id);
+    if (!order) {
       return res.status(404).json({ message: "Order not found." });
+    }
+
+    // Update order status
+    order.status = status;
+    const updatedOrder = await order.save();
+
+    // Handle table booking for dine-in orders
+    if (order.orderType === "dine-in" && order.tableNumber) {
+      const table = await Table.findOne({ tableNumber: order.tableNumber });
+      if (!table) {
+        return res.status(404).json({ message: `Table number ${order.tableNumber} not found` });
+      }
+
+      // Set isBooked based on status
+      // if (status === "in-progress") {
+      //   table.isBooked = true;
+      // } else if (["completed", "cancelled", "delivered"].includes(status)) {
+      //   table.isBooked = false;
+      //   table.currentOrderId = null;
+      // }
+
+      await table.save();
     }
 
     res.status(200).json({
@@ -224,3 +294,94 @@ export const updateOrderStatus = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
+
+export const getActiveOrder = async (req, res) => {
+  try {
+    const { tableNumber } = req.query;
+
+    if (!tableNumber) {
+      return res.status(400).json({ message: 'Table number is required' });
+    }
+
+    const inProgressOrders = await Order.find({
+      tableNumber,
+      orderType: 'dine-in',
+      status: 'in-progress',
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      totalInProgress: inProgressOrders.length,
+      orders: inProgressOrders,
+    });
+  } catch (error) {
+    console.error('Error fetching in-progress orders:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+}
+
+export const editOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const {
+      customerName,
+      specialInstructions,
+      updatedItems,
+    } = req.body;
+
+    // Fetch order
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    // Ensure order is editable
+    if (!['pending', 'in-progress'].includes(order.status)) {
+      return res.status(400).json({ message: 'Only pending or in-progress orders can be edited' });
+    }
+
+    if (customerName) {
+      order.customerName = customerName;
+    }
+
+    if (specialInstructions) {
+      order.specialInstructions = specialInstructions;
+    }
+
+    // Update existing items if provided
+    if (Array.isArray(updatedItems)) {
+      for (const updatedItem of updatedItems) {
+        const existingItem = order.items.id(updatedItem._id);
+        if (!existingItem) {
+          return res.status(404).json({ message: `Item with ID ${updatedItem._id} not found in order` });
+        }
+
+        if (updatedItem.name) {
+          existingItem.name = updatedItem.name;
+        }
+
+        if (typeof updatedItem.quantity === 'number' && updatedItem.quantity > 0) {
+          existingItem.quantity = updatedItem.quantity;
+        }
+
+        if (typeof updatedItem.price === 'number' && updatedItem.price > 0) {
+          existingItem.price = updatedItem.price;
+        }
+      }
+
+      // Recalculate subtotal
+      order.subtotal = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    }
+
+    const updatedOrder = await order.save();
+
+    res.status(200).json({
+      message: 'Order updated successfully',
+      order: updatedOrder,
+    });
+  } catch (error) {
+    console.error('Error editing order:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+

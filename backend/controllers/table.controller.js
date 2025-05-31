@@ -1,6 +1,5 @@
 import Order from "../models/order.model.js";
 import Table from "../models/table.model.js";
-
 import QRCode from "qrcode";
 import cloudinary from "../utils/cloudinary.js"; 
 import fs from "fs";
@@ -9,8 +8,6 @@ import path from "path";
 export const createTable = async (req, res) => {
   try {
     const { tableNumber } = req.body;
-
-    console.log(req.body);
     
 
     // Validate input
@@ -129,7 +126,27 @@ export const getAllTableQRCodes = async (req, res) => {
       qrCodes,
     });
   } catch (error) {
-    console.error("Error fetching QR codes:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+
+export const getTableBookingStatusCounts = async (req, res) => {
+  try {
+    const total = await Table.countDocuments();
+    const booked = await Table.countDocuments({ isBooked: true });
+    const unbooked = await Table.countDocuments({ isBooked: false });
+
+    res.status(200).json({
+      message: "Table booking status counts fetched successfully",
+      totalTables: total,
+      bookedTables: booked,
+      unbookedTables: unbooked,
+    });
+  } catch (error) {
+    console.error("Error fetching table booking counts:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};
+
+

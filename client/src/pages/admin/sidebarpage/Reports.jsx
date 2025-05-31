@@ -3,13 +3,21 @@ import { useBill } from "@/hooks/useTables.js";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useTables } from "@/hooks/useBill";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const Reports = () => {
   const { tables, loading, createTable, releaseTable } = useTables();
   const { billData, showModal, fetchBill, setShowModal } = useBill();
   const [newTableNumber, setNewTableNumber] = useState("");
+  const navigate = useNavigate();
 
   const handlePrint = () => window.print();
+
+  const handleViewOrders = (tableNumber) => {
+    fetchBill(tableNumber);
+    navigate(`/admin/orders/${tableNumber}`);
+  };
 
   const handleCreateTable = () => {
     if (!newTableNumber || isNaN(newTableNumber)) {
@@ -19,7 +27,6 @@ const Reports = () => {
     createTable(Number(newTableNumber));
     setNewTableNumber("");
   };
-  
 
   return (
     <div className="p-6">
@@ -52,7 +59,9 @@ const Reports = () => {
           <div
             key={table?._id}
             className={`p-4 rounded-xl shadow-md border ${
-              table?.isBooked ? "bg-red-100 border-red-400" : "bg-green-100 border-green-400"
+              table?.isBooked
+                ? "bg-red-100 border-red-400"
+                : "bg-green-100 border-green-400"
             }`}
           >
             <h3 className="text-xl font-semibold mb-2">
@@ -70,7 +79,9 @@ const Reports = () => {
 
             <p className="mb-1">
               Status:{" "}
-              <span className={table?.isBooked ? "text-red-600" : "text-green-600"}>
+              <span
+                className={table?.isBooked ? "text-red-600" : "text-green-600"}
+              >
                 {table?.isBooked ? "Booked" : "Available"}
               </span>
             </p>
@@ -82,11 +93,12 @@ const Reports = () => {
                 </p>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => fetchBill(table?.tableNumber)}
+                    onClick={() => handleViewOrders(table?.tableNumber)}
                     className="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700"
                   >
-                    Print Bill
+                    View Orders
                   </button>
+
                   <button
                     onClick={() => releaseTable(table?.tableNumber)}
                     disabled={loading}
@@ -109,7 +121,8 @@ const Reports = () => {
               Bill - Table {String(billData?.tableNumber ?? "N/A")}
             </h3>
             <p className="mb-2">
-              Customer: {typeof billData?.customerName === "string"
+              Customer:{" "}
+              {typeof billData?.customerName === "string"
                 ? billData.customerName
                 : billData?.customerName?.name || "N/A"}
             </p>

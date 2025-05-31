@@ -1,26 +1,25 @@
+// src/components/AdminDashboard.js
 import React from "react";
 import { Link } from "react-router-dom";
 import useKitchenStatus from "@/hooks/useKitchenStatus";
 import useStaffManagement from "@/hooks/useStaffManagement";
 import useInventoryManagement from "@/hooks/useInventoryManagement";
-import useTableReservations from "@/hooks/useTableReservations";
 import useAddNewItem from "@/hooks/useAddNewItem";
+import useOrderStats from "@/hooks/useOrderStats";
 import useTotalRevenue from "@/hooks/useTotalRevenue";
 import useTotalMenuItems from "@/hooks/useTotalMenuItems";
-import useOrderStats from "@/hooks/useOrderStats";
+import useTableStats from "@/hooks/useTableStats";
 
 const AdminDashboard = () => {
   const { totalOrders, loading: ordersLoading, error: ordersError } = useOrderStats();
   const { totalRevenue, loading: revenueLoading, error: revenueError } = useTotalRevenue();
   const { totalMenuItems, loading: menuLoading, error: menuError } = useTotalMenuItems();
-  
   const { kitchenStatus, loading: kitchenLoading, error: kitchenError } = useKitchenStatus();
   const { staffStatus, loading: staffLoading, error: staffError } = useStaffManagement();
   const { inventory, lowStockItems, loading: inventoryLoading, error: inventoryError } = useInventoryManagement();
-  const { reservations, availableTables, loading: reservationsLoading, error: reservationsError } = useTableReservations();
   const { addItem, loading: addItemLoading, success, error: addItemError } = useAddNewItem();
+  const { stats: tableStats, loading: tableStatsLoading, error: tableStatsError } = useTableStats();
 
-  // Card component for reusability
   const StatCard = ({ title, value, icon, color, loading, error, link }) => {
     const content = (
       <div className={`bg-white p-6 rounded-xl shadow-sm border-l-4 border-${color}-500 hover:shadow-md transition-all h-full flex flex-col`}>
@@ -41,7 +40,6 @@ const AdminDashboard = () => {
         </div>
       </div>
     );
-
     return link ? <Link to={link}>{content}</Link> : content;
   };
 
@@ -130,7 +128,7 @@ const AdminDashboard = () => {
             error={kitchenError}
             items={[
               { label: "Pending Orders", value: kitchenStatus?.pending || 0 },
-              { label: "Prepared Orders", value: kitchenStatus?.prepared || 0 }
+              { label: "Prepared Orders", value: kitchenStatus?.prepared || 0 },
             ]}
           />
           <StatusCard
@@ -139,16 +137,17 @@ const AdminDashboard = () => {
             error={staffError}
             items={[
               { label: "Active Staff", value: staffStatus?.active || 0 },
-              { label: "Total Staff", value: staffStatus?.total || 0 }
+              { label: "Total Staff", value: staffStatus?.total || 0 },
             ]}
           />
           <StatusCard
             title="Table Reservations"
-            loading={reservationsLoading}
-            error={reservationsError}
+            loading={tableStatsLoading}
+            error={tableStatsError}
             items={[
-              { label: "Reserved Tables", value: reservations?.length || 0 },
-              { label: "Available Tables", value: availableTables?.length || 0 }
+              { label: "Total Tables", value: tableStats?.totalTables || 0 },
+              { label: "Booked Tables", value: tableStats?.bookedTables || 0 },
+              { label: "Unbooked Tables", value: tableStats?.unbookedTables || 0 }, // Replaced activeTables
             ]}
           />
         </div>
@@ -158,31 +157,43 @@ const AdminDashboard = () => {
       <section>
         <h2 className="text-lg font-semibold text-gray-700 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Link to="/admin/dashboard/add" className="bg-white p-6 rounded-xl shadow-sm border border-dashed border-gray-300 hover:border-blue-500 hover:shadow-md transition-all flex items-center justify-center flex-col">
+          <Link
+            to="/admin/dashboard/add"
+            className="bg-white p-6 rounded-xl shadow-sm border border-dashed border-gray-300 hover:border-blue-500 hover:shadow-md transition-all flex items-center justify-center flex-col"
+          >
             <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-3">
               <i className="fas fa-plus text-xl"></i>
             </div>
             <h3 className="font-medium text-gray-700">Add Menu Item</h3>
             <p className="text-sm text-gray-500 text-center mt-1">Create a new dish for your menu</p>
           </Link>
-          
-          <Link to="/admin/staff/add" className="bg-white p-6 rounded-xl shadow-sm border border-dashed border-gray-300 hover:border-green-500 hover:shadow-md transition-all flex items-center justify-center flex-col">
+
+          <Link
+            to="/admin/staff/add"
+            className="bg-white p-6 rounded-xl shadow-sm border border-dashed border-gray-300 hover:border-green-500 hover:shadow-md transition-all flex items-center justify-center flex-col"
+          >
             <div className="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center mb-3">
               <i className="fas fa-user-plus text-xl"></i>
             </div>
             <h3 className="font-medium text-gray-700">Add Staff Member</h3>
             <p className="text-sm text-gray-500 text-center mt-1">Onboard new restaurant staff</p>
           </Link>
-          
-          <Link to="/admin/inventory" className="bg-white p-6 rounded-xl shadow-sm border border-dashed border-gray-300 hover:border-yellow-500 hover:shadow-md transition-all flex items-center justify-center flex-col">
+
+          <Link
+            to="/admin/inventory"
+            className="bg-white p-6 rounded-xl shadow-sm border border-dashed border-gray-300 hover:border-yellow-500 hover:shadow-md transition-all flex items-center justify-center flex-col"
+          >
             <div className="w-12 h-12 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center mb-3">
               <i className="fas fa-boxes text-xl"></i>
             </div>
             <h3 className="font-medium text-gray-700">Manage Inventory</h3>
             <p className="text-sm text-gray-500 text-center mt-1">View and update stock levels</p>
           </Link>
-          
-          <Link to="/admin/reservations" className="bg-white p-6 rounded-xl shadow-sm border border-dashed border-gray-300 hover:border-purple-500 hover:shadow-md transition-all flex items-center justify-center flex-col">
+
+          <Link
+            to="/admin/reservations"
+            className="bg-white p-6 rounded-xl shadow-sm border border-dashed border-gray-300 hover:border-purple-500 hover:shadow-md transition-all flex items-center justify-center flex-col"
+          >
             <div className="w-12 h-12 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mb-3">
               <i className="fas fa-calendar-alt text-xl"></i>
             </div>

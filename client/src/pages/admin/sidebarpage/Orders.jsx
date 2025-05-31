@@ -6,7 +6,7 @@ const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [orderTypeFilter, setOrderTypeFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState('day'); // default to 'today'
+  const [dateFilter, setDateFilter] = useState('day');
   const [statusFilter, setStatusFilter] = useState('all');
   const [loading, setLoading] = useState(true);
 
@@ -29,7 +29,7 @@ const Orders = () => {
 
   const handleChangeStatus = async (orderId, newStatus) => {
     try {
-      await axios.put(`${ORDER_API_END_POINT}/orders/${orderId}`, { status: newStatus }); // Adjust API endpoint
+      await axios.put(`${ORDER_API_END_POINT}/orders/${orderId}`, { status: newStatus });
       fetchOrders();
     } catch (error) {
       console.error('Failed to update status:', error);
@@ -60,7 +60,8 @@ const Orders = () => {
   const filteredOrders = (orders || [])
     .filter(order =>
       (order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.orderType.toLowerCase().includes(searchTerm.toLowerCase()))
+        order.orderType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (order.tableNumber && order.tableNumber.toString().includes(searchTerm)))
     )
     .filter(order =>
       (orderTypeFilter === 'all' || order.orderType === orderTypeFilter)
@@ -75,13 +76,13 @@ const Orders = () => {
   return (
     <div className="p-6 min-h-screen bg-gray-100">
       <div className="max-w-7xl mx-auto bg-white p-6 rounded-xl shadow-md">
-        <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Orders</h1>
+        <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Order Management</h1>
 
         {/* Filters */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <input
             type="text"
-            placeholder="Search by customer or type..."
+            placeholder="Search by customer, type, or table..."
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -95,6 +96,7 @@ const Orders = () => {
             <option value="all">All Types</option>
             <option value="dine-in">Dine-In</option>
             <option value="delivery">Delivery</option>
+            <option value="takeaway">Takeaway</option>
           </select>
 
           <select
@@ -139,11 +141,13 @@ const Orders = () => {
                 <tr className="bg-gray-100 text-gray-700 text-sm">
                   <th className="py-3 px-4 border">#</th>
                   <th className="py-3 px-4 border">Customer</th>
-                  <th className="py-3 px-4 border">Order Type</th>
+                  <th className="py-3 px-4 border">Type</th>
+                  <th className="py-3 px-4 border">Table</th>
+                  <th className="py-3 px-4 border">Items</th>
                   <th className="py-3 px-4 border">Status</th>
                   <th className="py-3 px-4 border">Payment</th>
-                  <th className="py-3 px-4 border">Subtotal</th>
-                  <th className="py-3 px-4 border">Date</th>
+                  <th className="py-3 px-4 border">Amount</th>
+                  <th className="py-3 px-4 border">Time</th>
                   <th className="py-3 px-4 border">Actions</th>
                 </tr>
               </thead>
@@ -151,17 +155,63 @@ const Orders = () => {
                 {filteredOrders.map((order, index) => (
                   <tr key={order._id} className="text-center text-sm hover:bg-gray-50">
                     <td className="py-3 px-4 border">{index + 1}</td>
-                    <td className="py-3 px-4 border">{order.customerName}</td>
-                    <td className="py-3 px-4 border capitalize">{order.orderType}</td>
-                    <td className="py-3 px-4 border capitalize">{order.status}</td>
-                    <td className="py-3 px-4 border capitalize">{order.paymentMethod}</td>
-                    <td className="py-3 px-4 border font-medium text-green-600">${order.subtotal.toFixed(2)}</td>
                     <td className="py-3 px-4 border">
-                      {new Date(order.createdAt).toLocaleDateString()}
+                      {order.customerName || 'Guest'}
+                      {order.specialInstructions && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          Note: {order.specialInstructions}
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 border capitalize">
+                      {order.orderType}
+                    </td>
+                    <td className="py-3 px-4 border font-medium">
+                      {order.orderType === 'dine-in' ? (
+                        <span className="bg-blue-100 text-blue-800 py-1 px-2 rounded-full text-xs">
+                          Table {order.tableNumber}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 border text-left">
+                      <div className="max-h-20 overflow-y-auto">
+                        {order.items?.map((item, i) => (
+                          <div key={i} className="mb-1">
+                            {item.quantity}x {item.name} (Rs.{item.price})
+                            {item.specialInstructions && (
+                              <div className="text-xs text-gray-500">
+                                {item.specialInstructions}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 border capitalize">
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        order.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
+                        order.status === 'completed' ? 'bg-green-100 text-green-800' :
+                        order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                        'bg-purple-100 text-purple-800'
+                      }`}>
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 border capitalize">
+                      {order.paymentMethod}
+                    </td>
+                    <td className="py-3 px-4 border font-medium text-green-600">
+                      Rs.{order.subtotal?.toFixed(2) || '0.00'}
+                    </td>
+                    <td className="py-3 px-4 border text-xs">
+                      {new Date(order.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                     </td>
                     <td className="py-3 px-4 border">
                       <select
-                        className="p-2 border rounded-md text-sm"
+                        className="p-2 border rounded-md text-sm w-full"
                         value={order.status}
                         onChange={(e) => handleChangeStatus(order._id, e.target.value)}
                       >

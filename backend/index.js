@@ -9,7 +9,6 @@ import menuItemRoute from "./routes/menuItem.route.js";
 import orderRoute from "./routes/order.route.js";
 import tableRoute from "./routes/table.route.js";
 import billRoute from "./routes/bill.route.js";
-import { fileURLToPath } from "url";
 
 dotenv.config();
 

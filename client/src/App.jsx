@@ -26,6 +26,8 @@ import GuestOrder from "./components/custumer/GuestOrderPage";
 import MenuPage from "./pages/admin/sidebarpage/Menu";
 import GuestOrderPage from "./components/custumer/GuestOrderPage";
 import GuestUserDashboard from "./pages/user/GuestUserDashboard";
+import ActiveOrder from "./components/custumer/ActiveOrder";
+import OrderDetails from "./pages/admin/sidebarpage/OrderDetails";
 
 function App() {
   return (
@@ -39,6 +41,8 @@ function App() {
         <Route path="/guest-order" element={<GuestOrder />} />
         <Route path="/guest-checkout" element={<GuestOrderPage />} />
         <Route path="/order" element={<GuestUserDashboard />} />
+        <Route path="/active-orders" element={<ActiveOrder />} />
+        
 
 
         {/* Cook Panel - Protected Routes */}
@@ -65,6 +69,7 @@ function App() {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="dashboard/add" element={<AddMenuItem />} />
           <Route path="orders" element={<Orders />} />
+          <Route path="orders/:tableNumber" element={<OrderDetails />} />
           <Route path="menu" element={<MenuPage />} />
           <Route path="inventory" element={<Inventory />} />
           <Route path="staff" element={<Staff />} />

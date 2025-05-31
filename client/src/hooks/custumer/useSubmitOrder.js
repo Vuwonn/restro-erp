@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { clearOrder } from "@/redux/orderSlice";
+import { setOrderItems } from "@/redux/orderSlice";
 import axios from "axios";
 import { ORDER_API_END_POINT } from "@/utils/constant";
+import { toast } from "react-toastify";
+import { removeItem } from "@/redux/cartSlice";
 
 const useSubmitOrder = () => {
   const dispatch = useDispatch();
@@ -40,8 +42,7 @@ const useSubmitOrder = () => {
     return null;
   };
 
-  const handleSubmitOrder = async (e) => {
-    e.preventDefault();
+  const handleSubmitOrder = async (activeOrderId) => {
     setIsSubmitting(true);
     setOrderSuccess(false);
     setError(null);
@@ -49,12 +50,14 @@ const useSubmitOrder = () => {
     console.info("Starting order submission", {
       orderType,
       itemCount: items.length,
-      subtotal
+      subtotal,
+      activeOrderId,
     });
 
     const validationError = validateOrder();
     if (validationError) {
       setError(validationError);
+      toast.error(validationError, { position: "top-right" });
       setIsSubmitting(false);
       return;
     }
@@ -79,54 +82,76 @@ const useSubmitOrder = () => {
     console.info("Submitting order with data", orderData);
 
     try {
-      const response = await axios.post(
-        `${ORDER_API_END_POINT}/create-order`,
-        orderData,
-        {
-          timeout: 10000,
-          headers: {
-            'Content-Type': 'application/json',
+      let response;
+      if (activeOrderId) {
+        // Add items to existing order
+        response = await axios.post(
+          `${ORDER_API_END_POINT}/add-item/${activeOrderId}`,
+          { newItems: items, tableNumber },
+          {
+            timeout: 10000,
+            headers: {
+              "Content-Type": "application/json",
+            },
           }
-        }
-      );
+        );
+      } else {
+        // Create new order
+        response = await axios.post(
+          `${ORDER_API_END_POINT}/create-order`,
+          orderData,
+          {
+            timeout: 10000,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+      }
 
       console.info("Order submission successful", {
         status: response.status,
-        data: response.data
+        data: response.data,
       });
 
-      if (response.status === 201) {
+      if (response.status === 200 || response.status === 201) {
         setOrderSuccess(true);
-        dispatch(clearOrder());
-        console.info("Order cleared from Redux store");
+        dispatch(setOrderItems({ items: [], subtotal: 0 }));
+        dispatch(removeItem());
+        toast.success(
+          activeOrderId ? "Items added to order!" : "Order placed successfully!",
+          { position: "top-right" }
+        );
+        console.info("Order and cart cleared from Redux store");
       } else {
         throw new Error(`Unexpected status code: ${response.status}`);
       }
     } catch (err) {
       let errorMessage = "Failed to submit order. Please try again.";
-      
+
       if (err.response) {
-        errorMessage = err.response.data?.message || 
-                      `Server error: ${err.response.status}`;
+        errorMessage =
+          err.response.data?.message || `Server error: ${err.response.status}`;
         console.error("Order submission failed - Server response", {
           status: err.response.status,
           responseData: err.response.data,
-          orderData
+          orderData,
         });
       } else if (err.request) {
         errorMessage = "No response from server. Please check your connection.";
         console.error("Order submission failed - No response", {
           orderData,
-          requestConfig: err.config
+          requestConfig: err.config,
         });
       } else {
         console.error("Order submission failed - Setup error", {
           orderData,
-          errorConfig: err.config
+          errorConfig: err.config,
         });
       }
-      
+
       setError(errorMessage);
+      toast.error(errorMessage, { position: "top-right" });
     } finally {
       setIsSubmitting(false);
       console.info("Order submission process completed");

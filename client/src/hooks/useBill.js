@@ -9,7 +9,7 @@ export const useTables = () => {
 
   const fetchTables = async () => {
     try {
-      const res = await axios.get(`${TABLE_API_END_POINT}/gettables`);
+      const res = await axios.get(`${TABLE_API_END_POINT}/gettables`, { withCredentials: true });
       setTables(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Fetch tables error:", err);
@@ -22,7 +22,7 @@ export const useTables = () => {
     if (!newTableNumber) return toast.warning("Please enter a table number");
     try {
       setLoading(true);
-      await axios.post(`${TABLE_API_END_POINT}/createtable`, {
+      await axios.post(`${TABLE_API_END_POINT}/createtable`, {withCredentials: true}, {
         tableNumber: Number(newTableNumber),
       });
       toast.success("Table created!");
@@ -38,7 +38,7 @@ export const useTables = () => {
   const releaseTable = async (tableNumber) => {
     try {
       setLoading(true);
-      await axios.put(`${TABLE_API_END_POINT}/release/${tableNumber}`);
+      await axios.put(`${TABLE_API_END_POINT}/release/${tableNumber}`,  { withCredentials: true });
       toast.success("Table released");
       await fetchTables();
     } catch (err) {

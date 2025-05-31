@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FiShoppingCart,
   FiUser,
@@ -6,11 +6,13 @@ import {
   FiHome,
   FiMenu,
   FiX,
+  FiList,
 } from "react-icons/fi";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import useCart from "@/hooks/custumer/useCart";
 import { useMenu } from "@/hooks/custumer/useMenu";
 import { useMobileMenu } from "@/hooks/custumer/useMobileMenu";
+import { ORDER_API_END_POINT } from "@/utils/constant";
 
 const GuestUserDashboard = () => {
   const navigate = useNavigate();
@@ -26,6 +28,7 @@ const GuestUserDashboard = () => {
     updateQuantity,
     totalItems,
     subtotal,
+    clearCart,
   } = useCart();
 
   const {
@@ -40,12 +43,49 @@ const GuestUserDashboard = () => {
 
   const { isMobileMenuOpen, setIsMobileMenuOpen } = useMobileMenu();
 
+  const [activeOrder, setActiveOrder] = useState(null);
+  const [error, setError] = useState(null);
+
+  // Fetch active order for other functionality (e.g., active orders page)
+  useEffect(() => {
+    if (!tableNumber) return;
+
+    const fetchActiveOrder = async () => {
+      try {
+        const response = await fetch(
+          `${ORDER_API_END_POINT}/orders/active?tableNumber=${tableNumber}`
+        );
+        const data = await response.json();
+        if (response.ok && data.order) {
+          setActiveOrder(data.order);
+        } else {
+          setActiveOrder(null);
+        }
+      } catch (err) {
+        console.error("Error fetching active order:", err);
+        setError("Failed to fetch active order");
+      }
+    };
+
+    fetchActiveOrder();
+  }, [tableNumber]);
+
+  // Handle proceeding to checkout for cart items
   const handleProceedToCheckout = () => {
     if (!tableNumber) {
       alert("Missing table number.");
       return;
     }
+    if (cart.length === 0) {
+      alert("Your cart is empty.");
+      return;
+    }
     navigate(`/guest-checkout?table=${tableNumber}`);
+  };
+
+  // Navigate to active orders page
+  const handleViewActiveOrders = () => {
+    navigate(`/active-orders?table=${tableNumber}`);
   };
 
   return (
@@ -75,7 +115,14 @@ const GuestUserDashboard = () => {
 
           <div className="flex items-center">
             <button
-              className="relative p-2 text-gray-600 hover:text-indigo-600"
+              className="p-2 text-gray-600 hover:text-indigo-600"
+              onClick={handleViewActiveOrders}
+              title="View Active Orders"
+            >
+              <FiList size={22} />
+            </button>
+            <button
+              className="relative p-2 text-gray-600 hover:text-indigo-600 ml-4"
               onClick={() => setIsCartOpen(!isCartOpen)}
             >
               <FiShoppingCart size={22} />
@@ -116,7 +163,9 @@ const GuestUserDashboard = () => {
                 <button
                   key={category}
                   className={`flex items-center py-2 px-4 rounded-lg hover:bg-gray-100 ${
-                    activeCategory === category ? "text-indigo-600 font-medium bg-indigo-50" : ""
+                    activeCategory === category
+                      ? "text-indigo-600 font-medium bg-indigo-50"
+                      : ""
                   }`}
                   onClick={() => {
                     setActiveCategory(category);
@@ -126,6 +175,15 @@ const GuestUserDashboard = () => {
                   {category}
                 </button>
               ))}
+              <button
+                className="flex items-center py-2 px-4 rounded-lg hover:bg-gray-100"
+                onClick={() => {
+                  handleViewActiveOrders();
+                  setIsMobileMenuOpen(false);
+                }}
+              >
+                <FiList className="mr-2" /> Active Orders
+              </button>
             </nav>
           </div>
         </div>
@@ -181,14 +239,21 @@ const GuestUserDashboard = () => {
                     <h3 className="text-xs sm:text-sm font-bold text-gray-800 line-clamp-1">
                       {item.name}
                     </h3>
-                    <span className="text-xs sm:text-sm font-bold text-indigo-600">${item.price.toFixed(2)}</span>
+                    <span className="text-xs sm:text-sm font-bold text-indigo-600">
+                      ${item.price.toFixed(2)}
+                    </span>
                   </div>
                   <p className="text-gray-500 text-[10px] sm:text-xs mb-2 line-clamp-2">
                     {item.description}
                   </p>
                   <button
                     onClick={() =>
-                      addToCart({ ...item, quantity: 1, specialInstructions: "" })
+                      addToCart({
+                        ...item,
+                        quantity: 1,
+                        specialInstructions: "",
+                        cartItemId: `${item.id}-${Date.now()}`,
+                      })
                     }
                     className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-1 px-2 rounded-md text-xs sm:text-sm"
                   >
@@ -203,7 +268,10 @@ const GuestUserDashboard = () => {
 
       {isCartOpen && (
         <div className="fixed inset-0 z-30 overflow-hidden">
-          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setIsCartOpen(false)}></div>
+          <div
+            className="absolute inset-0 bg-black bg-opacity-50"
+            onClick={() => setIsCartOpen(false)}
+          ></div>
           <div className="absolute inset-y-0 right-0 max-w-full flex">
             <div className="relative w-screen max-w-md">
               <div className="h-full flex flex-col bg-white shadow-xl">
@@ -218,7 +286,7 @@ const GuestUserDashboard = () => {
                 <div className="px-4 py-4 overflow-y-auto flex-1">
                   {cart.length === 0 ? (
                     <div className="text-center py-8">
-                      <p className="text-gray-500">Your cart is empty</p>
+                      <p className="text-gray-500">Your order is empty</p>
                       <button
                         onClick={() => setIsCartOpen(false)}
                         className="mt-4 text-indigo-600 hover:text-indigo-800 font-medium"
@@ -229,10 +297,12 @@ const GuestUserDashboard = () => {
                   ) : (
                     <div className="divide-y divide-gray-200">
                       {cart.map((item) => (
-                        <div key={item.id} className="py-4 flex">
+                        <div key={item.cartItemId} className="py-4 flex">
                           <div className="flex-shrink-0 h-16 w-16 rounded-md overflow-hidden">
                             <img
-                              src={item?.image?.url}
+                              src={
+                                item?.image?.url || "https://via.placeholder.com/64"
+                              }
                               alt={item.name}
                               className="h-full w-full object-cover"
                             />
@@ -242,18 +312,50 @@ const GuestUserDashboard = () => {
                               <h3 className="text-sm font-medium text-gray-800 line-clamp-1">
                                 {item.name}
                               </h3>
-                              <p className="text-sm font-bold text-gray-800 ml-4">${(item.price * item.quantity).toFixed(2)}</p>
+                              <p className="text-sm font-bold text-gray-800 ml-4">
+                                ${(item.price * item.quantity).toFixed(2)}
+                              </p>
                             </div>
                             <div className="mt-1 flex justify-between">
                               <div className="flex items-center border rounded-md">
-                                <button className="px-2 py-1" onClick={() => updateQuantity(item.id, item.quantity - 1)}>-</button>
-                                <span className="px-2 text-sm">{item.quantity}</span>
-                                <button className="px-2 py-1" onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</button>
+                                <button
+                                  className="px-2 py-1"
+                                  onClick={() =>
+                                    updateQuantity(
+                                      item.cartItemId,
+                                      item.quantity - 1
+                                    )
+                                  }
+                                >
+                                  -
+                                </button>
+                                <span className="px-2 text-sm">
+                                  {item.quantity}
+                                </span>
+                                <button
+                                  className="px-2 py-1"
+                                  onClick={() =>
+                                    updateQuantity(
+                                      item.cartItemId,
+                                      item.quantity + 1
+                                    )
+                                  }
+                                >
+                                  +
+                                </button>
                               </div>
-                              <button className="text-red-500 hover:text-red-700 text-sm" onClick={() => removeFromCart(item.id)}>
+                              <button
+                                className="text-red-500 hover:text-red-700 text-sm"
+                                onClick={() => removeFromCart(item.cartItemId)}
+                              >
                                 Remove
                               </button>
                             </div>
+                            {item.specialInstructions && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                Note: {item.specialInstructions}
+                              </p>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -262,6 +364,9 @@ const GuestUserDashboard = () => {
                 </div>
                 {cart.length > 0 && (
                   <div className="border-t border-gray-200 px-4 py-4">
+                    {error && (
+                      <p className="text-red-500 text-sm mb-2">{error}</p>
+                    )}
                     <div className="flex justify-between text-base md:text-lg font-bold mb-4">
                       <span>Subtotal:</span>
                       <span>${subtotal.toFixed(2)}</span>
@@ -292,6 +397,13 @@ const GuestUserDashboard = () => {
           >
             <FiShoppingCart size={20} />
             <span className="text-xs mt-1">Cart</span>
+          </button>
+          <button
+            className="flex flex-col items-center text-gray-600"
+            onClick={handleViewActiveOrders}
+          >
+            <FiList size={20} />
+            <span className="text-xs mt-1">Orders</span>
           </button>
           <button className="flex flex-col items-center text-gray-600">
             <FiUser size={20} />
