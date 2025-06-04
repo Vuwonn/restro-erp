@@ -5,7 +5,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
-import connectDB from "./utils/db.js"; 
+import connectDB from "./utils/db.js";
 import userRoute from "./routes/user.route.js";
 import menuItemRoute from "./routes/menuItem.route.js";
 import orderRoute from "./routes/order.route.js";
@@ -29,7 +29,7 @@ const io = new Server(server, {
   },
 });
 
-const _dirname = path.resolve(); 
+const _dirname = path.resolve();
 
 // Middleware
 app.use(cors({
@@ -54,8 +54,8 @@ app.use(cors({
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(cookieParser());
+app.use(express.static(path.join(_dirname, "/client/dist")));
 
-// Attach io instance to app locals so it can be used in routes/controllers
 app.locals.io = io;
 
 // Routes
@@ -65,13 +65,18 @@ app.use("/api/v1/order", orderRoute);
 app.use("/api/v1/table", tableRoute);
 app.use("/api/v1/bill", billRoute);
 
-// Static files
-app.use(express.static(path.join(_dirname, "admin", "dist")));
+// Temporary test route (instead of catch-all)
+app.get("/", (req, res) => {
+  res.sendFile(path.join(_dirname, "client", "dist", "index.html"));
+});
 
-// Socket.IO connection handling
+app.get(/(.*)/, (req, res) => {
+  res.sendFile(path.join(_dirname, "client", "dist", "index.html"));
+});
+
+// Socket.IO
 io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);
-
   socket.on("disconnect", () => {
     console.log("Client disconnected:", socket.id);
   });
@@ -79,7 +84,6 @@ io.on("connection", (socket) => {
 
 // Start Server
 const PORT = process.env.PORT || 8000;
-
 server.listen(PORT, async () => {
   try {
     await connectDB();
