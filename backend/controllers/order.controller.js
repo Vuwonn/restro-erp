@@ -295,6 +295,7 @@ export const updateOrderStatus = async (req, res) => {
   }
 };
 
+// controllers/orderController.js
 export const getActiveOrder = async (req, res) => {
   try {
     const { tableNumber } = req.query;
@@ -318,6 +319,71 @@ export const getActiveOrder = async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 }
+
+
+// controllers/orderController.js
+export const completeOrder = async (req, res) => {
+  try {
+    const { tableNumber } = req.body;
+
+    console.log('Received tableNumber:', tableNumber);
+
+    if (!tableNumber) {
+      return res.status(400).json({ message: 'Table number is required' });
+    }
+
+    // Ensure tableNumber is treated as a string (or number, depending on your schema)
+    const query = {
+      tableNumber: String(tableNumber), // Convert to string to match schema
+      orderType: 'dine-in',
+      status: { $in: ['pending', 'in-progress'] },
+    };
+    console.log('Query criteria:', query);
+
+    // Check existing orders
+    const existingOrders = await Order.find(query);
+    console.log('Found orders:', existingOrders);
+
+    if (existingOrders.length === 0) {
+      return res.status(404).json({ message: 'No active orders found for table' });
+    }
+
+    // Update orders to completed
+    const updateResult = await Order.updateMany(
+      query,
+      { $set: { status: 'completed' } },
+      { new: true }
+    );
+
+    console.log('Update result:', updateResult);
+
+    // Update table booking status
+    const table = await Table.findOne({ tableNumber: String(tableNumber) });
+    if (table) {
+      await Table.updateOne(
+        { tableNumber: String(tableNumber) },
+        {
+          $set: {
+            isBooked: false,
+            currentOrderId: null,
+          },
+        }
+      );
+      console.log('Table updated:', { tableNumber, isBooked: false });
+    } else {
+      console.warn(`Table ${tableNumber} not found`);
+    }
+
+    res.status(200).json({
+      message: 'Orders completed successfully',
+      modifiedCount: updateResult.modifiedCount,
+      matchedCount: updateResult.matchedCount,
+    });
+  } catch (error) {
+    console.error('Complete order error:', error);
+    res.status(500).json({ message: error.message || 'Server error' });
+  }
+};
 
 export const editOrder = async (req, res) => {
   try {
@@ -383,5 +449,34 @@ export const editOrder = async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 };
+
+
+export const sendToKotController = async (req, res) => {
+  const { orderId } = req.params;
+
+  if (!orderId) {
+    return res.status(400).json({ message: "Order ID is required" });
+  }
+
+  try {
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    if (order.sentToKOT) {
+      return res.status(400).json({ message: "Order already sent to KOT" });
+    }
+
+    order.sentToKOT = true;
+    await order.save();
+
+    res.status(200).json({ message: "Order sent to KOT successfully", order });
+  } catch (error) {
+    console.error("Error sending order to KOT:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 
 

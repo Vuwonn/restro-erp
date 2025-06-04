@@ -28,6 +28,8 @@ import GuestOrderPage from "./components/custumer/GuestOrderPage";
 import GuestUserDashboard from "./pages/user/GuestUserDashboard";
 import ActiveOrder from "./components/custumer/ActiveOrder";
 import OrderDetails from "./pages/admin/sidebarpage/OrderDetails";
+import TableManager from "./pages/admin/sidebarpage/TableStats";
+import Data from "./pages/admin/sidebarpage/Data";
 
 function App() {
   return (
@@ -73,7 +75,9 @@ function App() {
           <Route path="menu" element={<MenuPage />} />
           <Route path="inventory" element={<Inventory />} />
           <Route path="staff" element={<Staff />} />
-          <Route path="reports" element={<Reports />} />
+          <Route path="reports" element={<Data />} />
+          <Route path="table-stats" element={<TableManager />} />
+          <Route path="room-stats" element={<Reports />} />
           <Route path="settings" element={<Settings />} />
         </Route>
 

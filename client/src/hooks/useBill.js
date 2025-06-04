@@ -38,7 +38,7 @@ export const useTables = () => {
   const releaseTable = async (tableNumber) => {
     try {
       setLoading(true);
-      await axios.put(`${TABLE_API_END_POINT}/release/${tableNumber}`,  { withCredentials: true });
+      await axios.put(`${TABLE_API_END_POINT}/release/${tableNumber}`, {}, { withCredentials: true });
       toast.success("Table released");
       await fetchTables();
     } catch (err) {

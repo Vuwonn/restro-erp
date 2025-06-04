@@ -63,6 +63,10 @@ const orderSchema = new mongoose.Schema({
     enum: ["pending", "in-progress", "completed", "cancelled", "delivered"],
     default: "pending"
   },
+  sentToKOT: {
+    type: Boolean,
+    default: false
+  },
   createdAt: { type: Date, default: Date.now },
 }, {
   toJSON: { virtuals: true },

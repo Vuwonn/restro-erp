@@ -6,7 +6,10 @@ import {
   getFilteredOrders,
   updateOrderStatus,
   getActiveOrder,
+  completeOrder,
+  sendToKotController,
 } from "../controllers/order.controller.js";
+
 
 const router = express.Router();
 
@@ -27,5 +30,13 @@ router.put("/orders/:id", updateOrderStatus);
 
 
 router.get("/orders/active", getActiveOrder);
+
+// Complete an order
+router.put("/orders/complete", completeOrder);
+
+router.put('/orders/:orderId/send-to-kot', sendToKotController);
+
+
+
 
 export default router;

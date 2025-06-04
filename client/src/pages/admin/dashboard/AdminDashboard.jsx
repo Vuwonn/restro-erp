@@ -3,8 +3,6 @@ import React from "react";
 import { Link } from "react-router-dom";
 import useKitchenStatus from "@/hooks/useKitchenStatus";
 import useStaffManagement from "@/hooks/useStaffManagement";
-import useInventoryManagement from "@/hooks/useInventoryManagement";
-import useAddNewItem from "@/hooks/useAddNewItem";
 import useOrderStats from "@/hooks/useOrderStats";
 import useTotalRevenue from "@/hooks/useTotalRevenue";
 import useTotalMenuItems from "@/hooks/useTotalMenuItems";
@@ -16,8 +14,6 @@ const AdminDashboard = () => {
   const { totalMenuItems, loading: menuLoading, error: menuError } = useTotalMenuItems();
   const { kitchenStatus, loading: kitchenLoading, error: kitchenError } = useKitchenStatus();
   const { staffStatus, loading: staffLoading, error: staffError } = useStaffManagement();
-  const { inventory, lowStockItems, loading: inventoryLoading, error: inventoryError } = useInventoryManagement();
-  const { addItem, loading: addItemLoading, success, error: addItemError } = useAddNewItem();
   const { stats: tableStats, loading: tableStatsLoading, error: tableStatsError } = useTableStats();
 
   const StatCard = ({ title, value, icon, color, loading, error, link }) => {
@@ -80,7 +76,7 @@ const AdminDashboard = () => {
         <h2 className="text-lg font-semibold text-gray-700 mb-4">Key Metrics</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
-            title="Total Orders"
+            title="Total Orders today"
             value={totalOrders || 0}
             icon="shopping-bag"
             color="blue"
@@ -89,7 +85,7 @@ const AdminDashboard = () => {
             link="/admin/orders"
           />
           <StatCard
-            title="Total Revenue"
+            title="Total sales today"
             value={`$${totalRevenue || 0}`}
             icon="dollar-sign"
             color="green"
@@ -105,15 +101,6 @@ const AdminDashboard = () => {
             loading={menuLoading}
             error={menuError}
             link="/admin/menu"
-          />
-          <StatCard
-            title="Low Stock Items"
-            value={lowStockItems.length || 0}
-            icon="exclamation-triangle"
-            color="yellow"
-            loading={inventoryLoading}
-            error={inventoryError}
-            link="/admin/inventory"
           />
         </div>
       </section>
@@ -179,7 +166,7 @@ const AdminDashboard = () => {
             <p className="text-sm text-gray-500 text-center mt-1">Onboard new restaurant staff</p>
           </Link>
 
-          <Link
+          {/* <Link
             to="/admin/inventory"
             className="bg-white p-6 rounded-xl shadow-sm border border-dashed border-gray-300 hover:border-yellow-500 hover:shadow-md transition-all flex items-center justify-center flex-col"
           >
@@ -188,7 +175,7 @@ const AdminDashboard = () => {
             </div>
             <h3 className="font-medium text-gray-700">Manage Inventory</h3>
             <p className="text-sm text-gray-500 text-center mt-1">View and update stock levels</p>
-          </Link>
+          </Link> */}
 
           <Link
             to="/admin/reservations"

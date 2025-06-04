@@ -52,20 +52,6 @@ const Sidebar = () => {
           </NavLink>
         </li>
 
-        {/* Inventory Management */}
-        <li>
-          <NavLink
-            to="/admin/inventory"
-            className={({ isActive }) =>
-              isActive
-                ? "flex items-center space-x-4 p-3 rounded-lg bg-gray-700 transition-all"
-                : "flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-700 transition-all"
-            }
-          >
-            <i className="fas fa-cogs text-xl"></i>
-            <span>Inventory</span>
-          </NavLink>
-        </li>
 
         {/* Staff Management */}
         <li>
@@ -84,10 +70,10 @@ const Sidebar = () => {
 
 
 
-        {/* Reports */}
+        {/* Tables */}
         <li>
           <NavLink
-            to="/admin/reports"
+            to="/admin/table-stats"
             className={({ isActive }) =>
               isActive
                 ? "flex items-center space-x-4 p-3 rounded-lg bg-gray-700 transition-all"
@@ -95,9 +81,27 @@ const Sidebar = () => {
             }
           >
             <i className="fas fa-chart-line text-xl"></i>
-            <span>Reports</span>
+            <span>Tables Manager</span>
           </NavLink>
         </li>
+
+
+        {/* Rooms */}
+        <li>
+          <NavLink
+            to="/admin/room-stats"
+            className={({ isActive }) =>
+              isActive
+                ? "flex items-center space-x-4 p-3 rounded-lg bg-gray-700 transition-all"
+                : "flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-700 transition-all"
+            }
+          >
+            <i className="fas fa-chart-line text-xl"></i>
+            <span>Room Manager</span>
+          </NavLink>
+        </li>
+
+       
 
         {/* Settings */}
         <li>

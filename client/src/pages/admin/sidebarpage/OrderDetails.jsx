@@ -66,10 +66,47 @@ const OrderDetails = () => {
     fetchOrders();
   }, [tableNumber]);
 
-  const handlePrint = () => {
+const handlePrint = async () => {
+  try {
+    if (!tableNumber) {
+      throw new Error('Table number is missing');
+    }
+
+    console.log('Sending request with tableNumber:', tableNumber);
+
+    const response = await fetch(`${ORDER_API_END_POINT}/orders/complete`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ tableNumber }),
+    });
+
+    const result = await response.json();
+    console.log('API Response:', result);
+
+    if (!response.ok) {
+      throw new Error(result.message || 'Failed to complete orders');
+    }
+
+    if (result.matchedCount === 0) {
+      throw new Error('No active orders found to complete');
+    }
+
+    // Update local state only if orders were modified
+    if (result.modifiedCount > 0) {
+      setOrders((prevOrders) =>
+        prevOrders.map((order) => ({
+          ...order,
+          status: 'completed',
+        }))
+      );
+    }
+
+    // Proceed with printing
     const printContents = printRef.current.innerHTML;
     const originalContents = document.body.innerHTML;
-    
+
     const printStyle = `
       @media print {
         body {
@@ -103,17 +140,20 @@ const OrderDetails = () => {
         }
       }
     `;
-    
+
     document.body.innerHTML = `
       <style>${printStyle}</style>
       <div class="print-container">${printContents}</div>
     `;
-    
+
     window.print();
     document.body.innerHTML = originalContents;
     window.location.reload();
-  };
-
+  } catch (error) {
+    console.error('Error completing orders:', error);
+    alert(`Failed to complete orders: ${error.message}`);
+  }
+};
   const getOrderSubtotal = (order) => {
     return (order.items || []).reduce(
       (sum, item) => sum + item.price * item.quantity,

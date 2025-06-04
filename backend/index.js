@@ -1,4 +1,6 @@
 import express from "express";
+import http from "http";
+import { Server } from "socket.io";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -13,18 +15,31 @@ import billRoute from "./routes/bill.route.js";
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "http://localhost:8000",
+      "http://localhost:5173",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
+  },
+});
+
 const _dirname = path.resolve(); 
 
-// CORS Configuration
-const allowedOrigins = [
-  "http://localhost:3000",
-  "http://localhost:3001",
-  "http://localhost:8000",
-  "http://localhost:5173",
-];
-
-const corsOptions = {
+// Middleware
+app.use(cors({
   origin: (origin, callback) => {
+    const allowedOrigins = [
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "http://localhost:8000",
+      "http://localhost:5173",
+    ];
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -35,32 +50,37 @@ const corsOptions = {
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
   optionsSuccessStatus: 200,
-};
-
-app.use(cors(corsOptions));
+}));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(cookieParser());
 
-// API Routes
+// Attach io instance to app locals so it can be used in routes/controllers
+app.locals.io = io;
+
+// Routes
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/menuitem", menuItemRoute);
 app.use("/api/v1/order", orderRoute);
 app.use("/api/v1/table", tableRoute);
 app.use("/api/v1/bill", billRoute);
 
-// Serve Static Files from admin/dist
+// Static files
 app.use(express.static(path.join(_dirname, "admin", "dist")));
 
-// Catch-all Route for SPA (only for non-static requests)
-// app.get("*", (req, res) => {
-//   res.sendFile(path.join(_dirname, "admin", "dist", "index.html"));
-// });
+// Socket.IO connection handling
+io.on("connection", (socket) => {
+  console.log("Client connected:", socket.id);
 
-// Server Initialization
+  socket.on("disconnect", () => {
+    console.log("Client disconnected:", socket.id);
+  });
+});
+
+// Start Server
 const PORT = process.env.PORT || 8000;
 
-app.listen(PORT, async () => {
+server.listen(PORT, async () => {
   try {
     await connectDB();
     console.log(`Server running on port ${PORT}`);
