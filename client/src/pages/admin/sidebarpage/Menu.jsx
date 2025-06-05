@@ -73,7 +73,7 @@ const MenuPage = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this menu item?')) {
       try {
-        await axios.delete(`${MENU_ITEM_API_END_POINT}/${id}`);
+        await axios.delete(`${MENU_ITEM_API_END_POINT}/delete-menu-item/${id}`, { withCredentials: true });
         setMenuItems(menuItems.filter((item) => item._id !== id));
         toast.success('Menu item deleted successfully');
       } catch (error) {

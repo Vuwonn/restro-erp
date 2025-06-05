@@ -24,7 +24,7 @@ const useAddNewItem = () => {
       }
 
       const response = await axios.post(
-        `${MENU_ITEM_API_END_POINT}/add-menu-item`,
+        `${MENU_ITEM_API_ENDW_POINT}/add-menu-item`,
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },

@@ -59,14 +59,12 @@ export const addMenuItem = async (req, res) => {
 // Get all menu items
 export const getAllMenuItems = async (req, res) => {
   try {
-    console.log("Fetching all menu items...");
     const menuItems = await MenuItem.find();
 
     if (!menuItems || menuItems.length === 0) {
       return res.status(404).json({ message: "No menu items found." });
     }
 
-    console.log(menuItems);
     res.status(200).json({
       message: "Menu items retrieved successfully",
       menuItems,
@@ -92,7 +90,6 @@ export const getMenuItemById = async (req, res) => {
       menuItem,
     });
   } catch (error) {
-    console.error("Error retrieving menu item:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };

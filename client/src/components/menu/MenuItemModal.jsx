@@ -23,7 +23,7 @@ const MenuItemModal = ({ item, onClose, onSave }) => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/v1/menuitem/menu-categories');
+        const response = await axios.get(`${MENU_ITEM_API_END_POINT}/api/v1/menuitem/menu-categories`);
         setCategories(response.data.categories || []);
         setLoadingCategories(false);
       } catch (error) {
