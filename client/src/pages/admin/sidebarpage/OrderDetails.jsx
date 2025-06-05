@@ -460,7 +460,7 @@ const handlePrint = async () => {
                         )}
                       </div>
                       <div className="col-span-2 text-right">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        Rs {(item.price * item.quantity).toFixed(2)}
                         {isEditing && (
                           <button
                             onClick={() => handleRemoveItem(orderIndex, itemIndex)}
@@ -476,7 +476,7 @@ const handlePrint = async () => {
                   <div className="grid grid-cols-12 gap-2 border-t pt-2 mt-2">
                     <div className="col-span-10 text-right font-semibold">Subtotal:</div>
                     <div className="col-span-2 text-right font-semibold">
-                      ${getOrderSubtotal(order).toFixed(2)}
+                      Rs {getOrderSubtotal(order).toFixed(2)}
                     </div>
                   </div>
                 </div>
@@ -495,8 +495,8 @@ const handlePrint = async () => {
                         )}
                       </div>
                       <div className="col-span-2 text-center">{item.quantity}</div>
-                      <div className="col-span-2 text-right">${item.price.toFixed(2)}</div>
-                      <div className="col-span-2 text-right">${(item.price * item.quantity).toFixed(2)}</div>
+                      <div className="col-span-2 text-right">Rs {item.price.toFixed(2)}</div>
+                      <div className="col-span-2 text-right">Rs {(item.price * item.quantity).toFixed(2)}</div>
                     </div>
                   ))}
                   <div className="grid grid-cols-12 gap-2 border-t pt-2 mt-2">
@@ -597,7 +597,7 @@ const handlePrint = async () => {
             <div className="bill-totals border-t-2 border-dashed pt-4">
               <div className="flex justify-between font-bold text-lg">
                 <span>Grand Total:</span>
-                <span>${grandTotal.toFixed(2)}</span>
+                <span>Rs {grandTotal.toFixed(2)}</span>
               </div>
             </div>
 
@@ -612,9 +612,9 @@ const handlePrint = async () => {
                 </div>
                 <div>
                   <p className="font-semibold mb-1">Amount Received:</p>
-                  <p className="border-b pb-1">$_________</p>
-                  <p className="font-semibold mt-2">Change:</p>
-                  <p className="border-b pb-1">$_________</p>
+                  <p className="border-b pb-1">Rs _________</p>
+                  <p className="font-semibold mt-2">Rs _________</p>
+                  <p className="border-b pb-1">Rs _________</p>
                 </div>
               </div>
             </div>
@@ -631,7 +631,6 @@ const handlePrint = async () => {
               ) : (
                 <>
                   <p className="mb-1">{restaurantInfo.footerMessage}</p>
-                  <p className="mt-4 text-xs">* This is a computer generated bill *</p>
                 </>
               )}
             </div>

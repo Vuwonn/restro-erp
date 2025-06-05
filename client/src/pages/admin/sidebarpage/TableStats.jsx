@@ -5,12 +5,13 @@ import { useTables } from "@/hooks/useBill";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "react-toastify/dist/ReactToastify.css";
-import { ORDER_API_END_POINT } from "@/utils/constant";
+import { ORDER_API_END_POINT, TABLE_API_END_POINT } from "@/utils/constant";
 
 const TableManager = () => {
-  const { tables, loading, createTable, releaseTable, fetchTables } = useTables();
+  const { tables, loading: tableLoading, createTable, releaseTable, fetchTables } = useTables();
   const { billData, showModal, fetchBill, setShowModal } = useBill();
   const [newTableNumber, setNewTableNumber] = useState("");
+  const [creatingTable, setCreatingTable] = useState(false); // ✅ Local loading state
   const navigate = useNavigate();
 
   const handlePrint = () => window.print();
@@ -20,35 +21,50 @@ const TableManager = () => {
     navigate(`/admin/orders/${tableNumber}`);
   };
 
-  const handleCreateTable = () => {
+  const handleCreateTable = async () => {
     if (!newTableNumber || isNaN(newTableNumber)) {
       toast.warning("Please enter a valid table number");
       return;
     }
-    createTable(Number(newTableNumber));
-    setNewTableNumber("");
-  };
 
-  const completeAndPrintOrder = async (tableNumber) => {
     try {
-      const res = await axios.post(
-        `${ORDER_API_END_POINT}/orders/complete`,
-        { tableNumber },
+      setCreatingTable(true);
+      await axios.post(
+        `${TABLE_API_END_POINT}/createtable`,
+        { tableNumber: Number(newTableNumber) },
         { withCredentials: true }
       );
-
-      toast.success("Order marked as completed");
-      await fetchBill(tableNumber); // Fetch completed bill
-      setShowModal(true); // Show the bill modal
-
-      setTimeout(() => {
-        window.print(); // Automatically trigger print
-      }, 400);
+      toast.success("Table created successfully");
+      setNewTableNumber("");
+      await fetchTables();
     } catch (err) {
-      console.error("Complete order error:", err);
-      toast.error(err?.response?.data?.message || "Failed to complete order");
+      console.error("Create table error:", err);
+      toast.error(err?.response?.data?.message || "Failed to create table");
+    } finally {
+      setCreatingTable(false);
     }
   };
+
+  // const completeAndPrintOrder = async (tableNumber) => {
+  //   try {
+  //     const res = await axios.post(
+  //       `${ORDER_API_END_POINT}/orders/complete`,
+  //       { tableNumber },
+  //       { withCredentials: true }
+  //     );
+
+  //     toast.success("Order marked as completed");
+  //     await fetchBill(tableNumber);
+  //     setShowModal(true);
+
+  //     setTimeout(() => {
+  //       window.print();
+  //     }, 400);
+  //   } catch (err) {
+  //     console.error("Complete order error:", err);
+  //     toast.error(err?.response?.data?.message || "Failed to complete order");
+  //   }
+  // };
 
   return (
     <div className="p-6">
@@ -68,10 +84,10 @@ const TableManager = () => {
         />
         <button
           onClick={handleCreateTable}
-          disabled={loading}
+          disabled={creatingTable}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
         >
-          {loading ? "Creating..." : "Create Table"}
+          {creatingTable ? "Creating..." : "Create Table"}
         </button>
       </div>
 
@@ -119,18 +135,18 @@ const TableManager = () => {
 
                   <button
                     onClick={() => releaseTable(table?.tableNumber)}
-                    disabled={loading}
+                    disabled={tableLoading}
                     className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 disabled:opacity-50"
                   >
                     Release
                   </button>
 
-                  <button
+                  {/* <button
                     onClick={() => completeAndPrintOrder(table?.tableNumber)}
                     className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
                   >
                     Complete & Print
-                  </button>
+                  </button> */}
                 </div>
               </>
             )}

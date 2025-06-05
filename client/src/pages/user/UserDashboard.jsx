@@ -62,7 +62,7 @@ const UserDashboard = () => {
             >
               {isMobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
             </button>
-            <h1 className="text-xl font-bold text-indigo-600">QR Eats</h1>
+            <h1 className="text-xl font-bold text-indigo-600">Dari Restro</h1>
           </div>
 
           <div className="hidden md:flex items-center bg-gray-100 rounded-full px-4 py-2 flex-1 max-w-md mx-6">
@@ -199,7 +199,7 @@ const UserDashboard = () => {
                     <h3 className="text-xs sm:text-sm font-bold text-gray-800 line-clamp-1">
                       {item.name}
                     </h3>
-                    <span className="text-xs sm:text-sm font-bold text-indigo-600">{`$${item.price.toFixed(
+                    <span className="text-xs sm:text-sm font-bold text-indigo-600">{`Rs ${item.price.toFixed(
                       2
                     )}`}</span>
                   </div>

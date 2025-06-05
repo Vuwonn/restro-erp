@@ -11,9 +11,7 @@ const useTableStats = () => {
 
   const fetchStats = async () => {
     try {
-      console.log("Fetching table stats from:", `${TABLE_API_END_POINT}/totaldocuments`);
       const res = await axios.get(`${TABLE_API_END_POINT}/totaldocuments`, { withCredentials: true });
-      console.log("API response:", res.data);
       setStats(res.data);
     } catch (err) {
       console.error("Error fetching table stats:", err);

@@ -9,7 +9,12 @@ export const useBill = () => {
 
   const fetchBill = async (tableNumber) => {
     try {
-      const res = await axios.get(`${BILL_API_END_POINT}/table/${tableNumber}`, { withCredentials: true });
+      const res = await axios.get(
+        `${BILL_API_END_POINT}/table/${tableNumber}`,
+        {
+          withCredentials: true,
+        }
+      );
       setBillData(res.data);
       setShowModal(true);
     } catch (err) {
