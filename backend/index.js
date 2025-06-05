@@ -39,6 +39,7 @@ app.use(cors({
       "http://localhost:3001",
       "http://localhost:8000",
       "http://localhost:5173",
+      "https://restro-erp.onrender.com"
     ];
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
