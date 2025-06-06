@@ -6,6 +6,7 @@ import {
   getTableByNumber,
   getTableBookingStatusCounts,
   releaseTable,
+  deleteTable,
 } from "../controllers/table.controller.js";
 import isAuthenticated from "../middlewares/isAuthenticated.js";
 
@@ -17,5 +18,6 @@ router.get("/totaldocuments", getTableBookingStatusCounts); // Specific route be
 router.get("/:tableNumber", getTableByNumber); // Dynamic route after
 router.put("/release/:tableNumber", isAuthenticated, releaseTable);
 router.get("/get-qrcodes", getAllTableQRCodes);
+router.delete("/delete/:tableId", isAuthenticated, deleteTable);
 
 export default router;

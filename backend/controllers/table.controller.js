@@ -150,3 +150,34 @@ export const getTableBookingStatusCounts = async (req, res) => {
 };
 
 
+export const deleteTable = async (req, res) => {
+  try {
+    const { tableNumber } = req.params;
+
+    const table = await Table.findOne({ tableNumber });
+
+    if (!table) {
+      return res.status(404).json({ message: "Table not found" });
+    }
+
+    if (table.isBooked) {
+      return res.status(400).json({ message: "Cannot delete a booked table" });
+    }
+
+    // Delete the QR code image from Cloudinary
+    if (table.qrImage?.public_id) {
+      await cloudinary.uploader.destroy(table.qrImage.public_id);
+    }
+
+    // Delete the table document
+    await Table.deleteOne({ _id: table._id });
+
+    res.status(200).json({ message: "Table deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting table:", err);
+    res.status(500).json({ message: "Internal server error", error: err.message });
+  }
+};
+
+
+

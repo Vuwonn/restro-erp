@@ -5,13 +5,21 @@ import { useTables } from "@/hooks/useBill";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "react-toastify/dist/ReactToastify.css";
-import { ORDER_API_END_POINT, TABLE_API_END_POINT } from "@/utils/constant";
+import { TABLE_API_END_POINT } from "@/utils/constant";
+import { MoreVertical } from "lucide-react"; // three-dot icon
 
 const TableManager = () => {
-  const { tables, loading: tableLoading, createTable, releaseTable, fetchTables } = useTables();
+  const {
+    tables,
+    loading: tableLoading,
+    releaseTable,
+    fetchTables,
+  } = useTables();
+
   const { billData, showModal, fetchBill, setShowModal } = useBill();
   const [newTableNumber, setNewTableNumber] = useState("");
-  const [creatingTable, setCreatingTable] = useState(false); // ✅ Local loading state
+  const [creatingTable, setCreatingTable] = useState(false);
+  const [dropdownOpenId, setDropdownOpenId] = useState(null); // Track dropdown toggle
   const navigate = useNavigate();
 
   const handlePrint = () => window.print();
@@ -45,26 +53,21 @@ const TableManager = () => {
     }
   };
 
-  // const completeAndPrintOrder = async (tableNumber) => {
-  //   try {
-  //     const res = await axios.post(
-  //       `${ORDER_API_END_POINT}/orders/complete`,
-  //       { tableNumber },
-  //       { withCredentials: true }
-  //     );
+  const handleDeleteTable = async (tableId) => {
+    const confirmed = window.confirm("Are you sure you want to delete this table?");
+    if (!confirmed) return;
 
-  //     toast.success("Order marked as completed");
-  //     await fetchBill(tableNumber);
-  //     setShowModal(true);
-
-  //     setTimeout(() => {
-  //       window.print();
-  //     }, 400);
-  //   } catch (err) {
-  //     console.error("Complete order error:", err);
-  //     toast.error(err?.response?.data?.message || "Failed to complete order");
-  //   }
-  // };
+    try {
+      await axios.delete(`${TABLE_API_END_POINT}/delete/${tableId}`, {
+        withCredentials: true,
+      });
+      toast.success("Table deleted successfully");
+      await fetchTables();
+    } catch (err) {
+      console.error("Delete table error:", err);
+      toast.error(err?.response?.data?.message || "Failed to delete table");
+    }
+  };
 
   return (
     <div className="p-6">
@@ -96,15 +99,37 @@ const TableManager = () => {
         {(tables || []).map((table) => (
           <div
             key={table?._id}
-            className={`p-4 rounded-xl shadow-md border ${
+            className={`relative p-4 rounded-xl shadow-md border ${
               table?.isBooked ? "bg-red-100 border-red-400" : "bg-green-100 border-green-400"
             }`}
           >
+            {/* Dropdown menu button */}
+            <div className="absolute top-2 right-2">
+              <button
+                onClick={() =>
+                  setDropdownOpenId((prevId) => (prevId === table._id ? null : table._id))
+                }
+              >
+                <MoreVertical className="w-5 h-5 text-gray-700" />
+              </button>
+
+              {/* Dropdown */}
+              {dropdownOpenId === table._id && (
+                <div className="absolute right-0 mt-2 bg-white border rounded shadow z-10">
+                  <button
+                    onClick={() => handleDeleteTable(table._id)}
+                    className="block w-full px-4 py-2 text-sm text-red-600 hover:bg-red-100 text-left"
+                  >
+                    Delete Table
+                  </button>
+                </div>
+              )}
+            </div>
+
             <h3 className="text-xl font-semibold mb-2">
               Table {String(table?.tableNumber)}
             </h3>
 
-            {/* QR Image */}
             {table?.qrImage?.url && (
               <img
                 src={table.qrImage.url}
@@ -140,13 +165,6 @@ const TableManager = () => {
                   >
                     Release
                   </button>
-
-                  {/* <button
-                    onClick={() => completeAndPrintOrder(table?.tableNumber)}
-                    className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
-                  >
-                    Complete & Print
-                  </button> */}
                 </div>
               </>
             )}

@@ -41,7 +41,7 @@ export const addMenuItem = async (req, res) => {
       category: req.body.category,
       image: mainImage,
       status: req.body.status,
-      createdBy: userId,
+      createdBy: userId,  
     });
 
     const savedMenuItem = await newMenuItem.save();
