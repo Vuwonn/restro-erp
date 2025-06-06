@@ -147,9 +147,9 @@ const TableManager = () => {
 
             {table?.isBooked && (
               <>
-                <p className="mb-2 text-sm text-gray-600">
+                {/* <p className="mb-2 text-sm text-gray-600">
                   Order ID: {String(table?.currentOrderId || "N/A")}
-                </p>
+                </p> */}
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => handleViewOrders(table?.tableNumber)}

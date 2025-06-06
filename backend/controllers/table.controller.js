@@ -25,7 +25,7 @@ export const createTable = async (req, res) => {
     const table = new Table({ tableNumber });
 
     // Generate QR code URL
-    const qrUrl = `http://localhost:5173/order?table=${tableNumber}`;
+    const qrUrl = `https://restro-erp.onrender.com/order?table=${tableNumber}`;
     
     // Use OS-independent temp file path
     const tempDir = path.resolve("./tmp");
@@ -152,9 +152,9 @@ export const getTableBookingStatusCounts = async (req, res) => {
 
 export const deleteTable = async (req, res) => {
   try {
-    const { tableNumber } = req.params;
+    const { tableId } = req.params;
 
-    const table = await Table.findOne({ tableNumber });
+    const table = await Table.findById(tableId);
 
     if (!table) {
       return res.status(404).json({ message: "Table not found" });
@@ -164,13 +164,11 @@ export const deleteTable = async (req, res) => {
       return res.status(400).json({ message: "Cannot delete a booked table" });
     }
 
-    // Delete the QR code image from Cloudinary
     if (table.qrImage?.public_id) {
       await cloudinary.uploader.destroy(table.qrImage.public_id);
     }
 
-    // Delete the table document
-    await Table.deleteOne({ _id: table._id });
+    await Table.findByIdAndDelete(tableId);
 
     res.status(200).json({ message: "Table deleted successfully" });
   } catch (err) {
@@ -178,6 +176,8 @@ export const deleteTable = async (req, res) => {
     res.status(500).json({ message: "Internal server error", error: err.message });
   }
 };
+
+
 
 
 
