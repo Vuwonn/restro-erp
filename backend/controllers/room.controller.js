@@ -37,7 +37,7 @@ export const createRoom = async (req, res) => {
     });
 
     // Generate QR code URL for the room
-    const qrUrl = `http://localhost:5173/order?room=${roomNumber}`;
+    const qrUrl = `https://restro-erp.onrender.com/order?room=${roomNumber}`;
 
     // Generate QR code and save temporarily
     const tempDir = path.resolve("./tmp");
@@ -108,6 +108,7 @@ export const getAllRooms = async (req, res) => {
   }
 };
 
+
 // Get single room by number
 export const getRoomByNumber = async (req, res) => {
   try {
@@ -119,6 +120,71 @@ export const getRoomByNumber = async (req, res) => {
     res.status(500).json({ message: "Internal server error", error: err.message });
   }
 };
+
+// Update/edit a room
+export const updateRoom = async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const {
+      roomNumber,
+      roomType,
+      capacity,
+      pricePerNight,
+      amenities,
+    } = req.body;
+
+    const room = await Room.findById(roomId);
+    if (!room) return res.status(404).json({ message: "Room not found" });
+
+    // Prevent room number conflicts
+    if (roomNumber && roomNumber !== room.roomNumber) {
+      const existingRoom = await Room.findOne({ roomNumber });
+      if (existingRoom) {
+        return res.status(400).json({ message: "Room number already exists" });
+      }
+    }
+
+    // Update fields
+    if (roomNumber) room.roomNumber = roomNumber;
+    if (roomType) room.roomType = roomType;
+    if (capacity !== undefined) room.capacity = capacity;
+    if (pricePerNight) room.pricePerNight = pricePerNight;
+    if (amenities) room.amenities = Array.isArray(amenities) ? amenities : [amenities];
+
+    // Handle photo update (optional)
+    if (req.files && req.files.length > 0) {
+      // Delete old photos from Cloudinary
+      if (room.photos && room.photos.length > 0) {
+        for (const photo of room.photos) {
+          await cloudinary.uploader.destroy(photo.public_id);
+        }
+      }
+
+      const newPhotos = [];
+      for (const file of req.files) {
+        const fileUri = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
+
+        const uploadResult = await cloudinary.uploader.upload(fileUri, {
+          folder: "roomPhotos",
+        });
+
+        newPhotos.push({
+          public_id: uploadResult.public_id,
+          url: uploadResult.secure_url,
+        });
+      }
+
+      room.photos = newPhotos;
+    }
+
+    await room.save();
+    res.status(200).json({ message: "Room updated successfully", room });
+  } catch (err) {
+    console.error("Error updating room:", err);
+    res.status(500).json({ message: "Internal server error", error: err.message });
+  }
+};
+
 
 // Book room (check-in)
 export const checkInRoom = async (req, res) => {
@@ -240,6 +306,39 @@ export const getRoomBookingStatusCounts = async (req, res) => {
       availableRooms: available,
     });
   } catch (err) {
+    res.status(500).json({ message: "Internal server error", error: err.message });
+  }
+};
+
+// Delete a specific room photo
+export const deleteRoomPhoto = async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const { public_id } = req.body;
+
+    if (!public_id) {
+      return res.status(400).json({ message: "public_id is required to delete the photo" });
+    }
+
+    const room = await Room.findById(roomId);
+    if (!room) return res.status(404).json({ message: "Room not found" });
+
+    // Check if photo exists in room
+    const photoExists = room.photos.find((photo) => photo.public_id === public_id);
+    if (!photoExists) {
+      return res.status(404).json({ message: "Photo not found in this room" });
+    }
+
+    // Remove from Cloudinary
+    await cloudinary.uploader.destroy(public_id);
+
+    // Remove from DB
+    room.photos = room.photos.filter((photo) => photo.public_id !== public_id);
+
+    await room.save();
+    res.status(200).json({ message: "Photo deleted successfully", room });
+  } catch (err) {
+    console.error("Error deleting photo:", err);
     res.status(500).json({ message: "Internal server error", error: err.message });
   }
 };

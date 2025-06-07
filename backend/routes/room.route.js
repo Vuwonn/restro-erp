@@ -3,14 +3,15 @@ import {
   createRoom,
   getAllRooms,
   getRoomByNumber,
-  getRoomStatusCounts,
   checkInRoom,
   checkOutRoom,
   deleteRoom,
+  updateRoom,
+  deleteRoomPhoto,
 } from "../controllers/room.controller.js";
 
 import isAuthenticated from "../middlewares/isAuthenticated.js";
-import { multipleUpload } from "../middlewares/multer.js"; 
+import { multipleUpload } from "../middlewares/mutler.js";
 
 const router = express.Router();
 
@@ -18,10 +19,8 @@ const router = express.Router();
 router.post("/create", isAuthenticated, multipleUpload, createRoom);
 
 // Get all rooms
-router.get("/getrooms", isAuthenticated, getAllRooms);
+router.get("/getrooms", getAllRooms);
 
-// Get total/available/booked room counts
-router.get("/status-counts", getRoomStatusCounts);
 
 // Get room details by room number
 router.get("/:roomNumber", getRoomByNumber);
@@ -34,5 +33,11 @@ router.put("/checkout/:roomNumber", isAuthenticated, checkOutRoom);
 
 // Delete a room
 router.delete("/delete/:roomId", isAuthenticated, deleteRoom);
+
+// Update room details
+router.put("/update/:roomId", isAuthenticated, multipleUpload, updateRoom);
+
+// Delete a room photo
+router.delete("/deletephoto/:roomId", isAuthenticated, deleteRoomPhoto);
 
 export default router;

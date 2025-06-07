@@ -119,11 +119,27 @@ export const createOrder = async (req, res) => {
 
 export const getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find();
-    const totalOrders = orders.length;
+    // Extract pagination parameters from query
+    const page = parseInt(req.query.page) || 1; // Default to page 1
+    const limit = parseInt(req.query.limit) || 10; // Default to 10 orders per page
+    const skip = (page - 1) * limit; // Calculate number of documents to skip
+
+    // Fetch orders with pagination
+    const orders = await Order.find()
+      .sort({ createdAt: -1 }) // Sort by creation date, newest first
+      .skip(skip)
+      .limit(limit);
+
+    // Get total number of orders for pagination metadata
+    const totalOrders = await Order.countDocuments();
+
+    // Calculate total pages
+    const totalPages = Math.ceil(totalOrders / limit);
 
     res.status(200).json({
       totalOrders,
+      totalPages,
+      currentPage: page,
       orders,
     });
   } catch (error) {

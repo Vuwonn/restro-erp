@@ -11,6 +11,7 @@ import menuItemRoute from "./routes/menuItem.route.js";
 import orderRoute from "./routes/order.route.js";
 import tableRoute from "./routes/table.route.js";
 import billRoute from "./routes/bill.route.js";
+import roomRoute from "./routes/room.route.js"; 
 
 dotenv.config();
 
@@ -65,6 +66,7 @@ app.use("/api/v1/menuitem", menuItemRoute);
 app.use("/api/v1/order", orderRoute);
 app.use("/api/v1/table", tableRoute);
 app.use("/api/v1/bill", billRoute);
+app.use("/api/v1/room", roomRoute);
 
 // Temporary test route (instead of catch-all)
 app.get("/", (req, res) => {

@@ -30,6 +30,7 @@ import ActiveOrder from "./components/custumer/ActiveOrder";
 import OrderDetails from "./pages/admin/sidebarpage/OrderDetails";
 import TableManager from "./pages/admin/sidebarpage/TableStats";
 import Data from "./pages/admin/sidebarpage/Data";
+import RoomManager from "./pages/admin/sidebarpage/RoomStats";
 
 function App() {
   return (
@@ -77,7 +78,7 @@ function App() {
           <Route path="staff" element={<Staff />} />
           <Route path="reports" element={<Data />} />
           <Route path="table-stats" element={<TableManager />} />
-          <Route path="room-stats" element={<Reports />} />
+          <Route path="room-stats" element={<RoomManager />} />
           <Route path="settings" element={<Settings />} />
         </Route>
 
