@@ -8,3 +8,4 @@ export const ORDER_API_END_POINT = `${API_BASE_URL}/order`;
 export const TABLE_API_END_POINT = `${API_BASE_URL}/table`;
 export const BILL_API_END_POINT = `${API_BASE_URL}/bill`;
 export const ROOM_API_END_POINT = `${API_BASE_URL}/room`;
+export const POS_API_END_POINT = `${API_BASE_URL}/pos`;

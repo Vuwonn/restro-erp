@@ -19,7 +19,6 @@ import CookProtectedRoute from "./components/auth/CookProtectedRoute";
 import Orders from "./pages/admin/sidebarpage/Orders";
 import Inventory from "./pages/admin/sidebarpage/Inventory";
 import Staff from "./pages/admin/sidebarpage/Staff";
-import Reports from "./pages/admin/sidebarpage/Reports";
 import Settings from "./pages/admin/sidebarpage/Settings";
 import AddMenuItem from "./pages/admin/menu/AddMenuItem";
 import GuestOrder from "./components/custumer/GuestOrderPage";
@@ -31,6 +30,8 @@ import OrderDetails from "./pages/admin/sidebarpage/OrderDetails";
 import TableManager from "./pages/admin/sidebarpage/TableStats";
 import Data from "./pages/admin/sidebarpage/Data";
 import RoomManager from "./pages/admin/sidebarpage/RoomStats";
+import AdminPOSPage from "./pages/admin/sidebarpage/AdminPOSPage";
+import CheckoutPage from "./pages/admin/sidebarpage/Checkout";
 
 function App() {
   return (
@@ -79,6 +80,8 @@ function App() {
           <Route path="reports" element={<Data />} />
           <Route path="table-stats" element={<TableManager />} />
           <Route path="room-stats" element={<RoomManager />} />
+          <Route path="pos" element={<AdminPOSPage />} />
+          <Route path="pos/checkout" element={<CheckoutPage />} />
           <Route path="settings" element={<Settings />} />
         </Route>
 

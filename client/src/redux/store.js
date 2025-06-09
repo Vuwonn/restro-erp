@@ -1,7 +1,9 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import authSlice from "./authSlice";
 import orderSlice from "./orderSlice";
-import cartSlice from "./cartSlice"; // Import cartSlice
+import cartSlice from "./cartSlice";
+import posSlice from "./posSlice";
+
 import {
   persistStore,
   persistReducer,
@@ -26,7 +28,7 @@ const orderPersistConfig = {
   key: "order",
   version: 1,
   storage,
-  blacklist: ["items"], // Don't persist order items to prevent stale data
+  blacklist: ["items"],
 };
 
 // Persist configuration for cart
@@ -34,17 +36,28 @@ const cartPersistConfig = {
   key: "cart",
   version: 1,
   storage,
-  blacklist: ["items", "subtotal", "totalItems"], // Don't persist cart items, subtotal, or totalItems
+  blacklist: ["items", "subtotal", "totalItems"],
 };
+
+// ✅ You can also add a persist config for posSlice if needed
+// Example (if some parts of pos should be excluded):
+// const posPersistConfig = {
+//   key: "pos",
+//   version: 1,
+//   storage,
+//   blacklist: ["temporaryData"],
+// };
 
 const persistedAuthReducer = persistReducer(authPersistConfig, authSlice);
 const persistedOrderReducer = persistReducer(orderPersistConfig, orderSlice);
 const persistedCartReducer = persistReducer(cartPersistConfig, cartSlice);
+// const persistedPosReducer = persistReducer(posPersistConfig, posSlice); // Uncomment if using persist for pos
 
 const rootReducer = combineReducers({
   auth: persistedAuthReducer,
   order: persistedOrderReducer,
-  cart: persistedCartReducer, // Add cart reducer
+  cart: persistedCartReducer,
+  pos: posSlice, // Use persistedPosReducer if using persist
 });
 
 const store = configureStore({
