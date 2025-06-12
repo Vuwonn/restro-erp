@@ -21,6 +21,7 @@ import {
 import useSubmitOrder from "@/hooks/custumer/useSubmitOrder";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { ORDER_API_END_POINT } from "@/utils/constant";
 
 const GuestOrder = () => {
   const dispatch = useDispatch();
@@ -74,7 +75,7 @@ const GuestOrder = () => {
     const fetchActiveOrder = async () => {
       if (!table || orderId) return;
       try {
-        const response = await fetch(`/api/orders/active?tableNumber=${table}`);
+        const response = await fetch(`${ORDER_API_END_POINT}/orders/active?tableNumber=${table}`);
         const data = await response.json();
         if (response.ok && data.order) {
           setActiveOrder(data.order);

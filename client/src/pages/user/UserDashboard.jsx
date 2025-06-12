@@ -7,7 +7,7 @@ import {
   FiMenu,
   FiX,
 } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import useCart from "@/hooks/custumer/useCart";
 import { useMenu } from "@/hooks/custumer/useMenu";
 import { useMobileMenu } from "@/hooks/custumer/useMobileMenu";
@@ -41,10 +41,6 @@ const UserDashboard = () => {
   // Mobile menu functionality
   const { isMobileMenuOpen, setIsMobileMenuOpen } = useMobileMenu();
 
-  // Debug logging to check data and keys
-  console.log("Categories:", categories);
-  console.log("Filtered Items:", filteredItems);
-  console.log("Cart Items:", cart);
 
   const handleProceedToCheckout = () => {
     navigate("/guest-order");
@@ -116,6 +112,13 @@ const UserDashboard = () => {
             <nav className="flex flex-col space-y-2">
               <button className="flex items-center py-2 px-4 rounded-lg hover:bg-gray-100">
                 <FiHome className="mr-2" /> Home
+              </button>
+                          <button className="flex items-center py-2 px-4 rounded-lg hover:bg-gray-100"
+                          onclick={() => {
+                            navigate("/rooms");
+                          }}
+                          >
+                <FiHome className="mr-2" /> Rooms
               </button>
               {categories.length === 0 ? (
                 <p className="text-gray-500">No categories available</p>

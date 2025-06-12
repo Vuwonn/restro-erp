@@ -32,6 +32,7 @@ import Data from "./pages/admin/sidebarpage/Data";
 import RoomManager from "./pages/admin/sidebarpage/RoomStats";
 import AdminPOSPage from "./pages/admin/sidebarpage/AdminPOSPage";
 import CheckoutPage from "./pages/admin/sidebarpage/Checkout";
+import Reports from "./pages/admin/sidebarpage/Reports";
 
 function App() {
   return (
@@ -77,7 +78,7 @@ function App() {
           <Route path="menu" element={<MenuPage />} />
           <Route path="inventory" element={<Inventory />} />
           <Route path="staff" element={<Staff />} />
-          <Route path="reports" element={<Data />} />
+          <Route path="reports" element={<Reports />} />
           <Route path="table-stats" element={<TableManager />} />
           <Route path="room-stats" element={<RoomManager />} />
           <Route path="pos" element={<AdminPOSPage />} />

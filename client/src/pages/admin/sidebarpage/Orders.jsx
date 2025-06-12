@@ -339,12 +339,12 @@ const Orders = () => {
                         </button>
                       )}
 
-                      <button
+                      {/* <button
                         onClick={() => handleGenerateBill(order)}
                         className="bg-green-600 text-white px-2 py-1 rounded text-xs w-full hover:bg-green-700"
                       >
                         Generate Bill
-                      </button>
+                      </button> */}
                     </td>
                   </tr>
                 ))}

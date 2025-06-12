@@ -48,18 +48,18 @@ export const createBill = async (req, res) => {
 };
 
 // Get all bills
-export const getAllBills = async (req, res) => {
-  try {
-    const bills = await Bill.find()
-      .populate("items.menuItem")
-      .populate("room")
-      .populate("servedBy")
-      .sort({ createdAt: -1 });
-    res.json(bills);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch bills" });
-  }
-};
+// export const getAllBills = async (req, res) => {
+//   try {
+//     const bills = await Bill.find()
+//       .populate("items.menuItem")
+//       .populate("room")
+//       .populate("servedBy")
+//       .sort({ createdAt: -1 });
+//     res.json(bills);
+//   } catch (err) {
+//     res.status(500).json({ error: "Failed to fetch bills" });
+//   }
+// };
 
 // Get daily sales
 export const getDailySales = async (req, res) => {
@@ -69,7 +69,7 @@ export const getDailySales = async (req, res) => {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const sales = await Bill.aggregate([
+    const sales = await posModel.aggregate([
       {
         $match: {
           createdAt: { $gte: today, $lt: tomorrow }
@@ -93,10 +93,11 @@ export const getDailySales = async (req, res) => {
 // Get monthly sales
 export const getMonthlySales = async (req, res) => {
   try {
-    const start = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-    const end = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1);
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
-    const sales = await Bill.aggregate([
+    const sales = await posModel.aggregate([
       {
         $match: {
           createdAt: { $gte: start, $lt: end }
@@ -117,30 +118,20 @@ export const getMonthlySales = async (req, res) => {
   }
 };
 
-// Get most sold items
+// Get most sold items (Top 5)
 export const getTopItems = async (req, res) => {
   try {
-    const topItems = await Bill.aggregate([
+    const topItems = await posModel.aggregate([
       { $unwind: "$items" },
       {
         $group: {
-          _id: "$items.menuItem",
-          totalQuantity: { $sum: "$items.quantity" }
+          _id: "$items.name",
+          totalQuantity: { $sum: "$items.quantity" },
+          totalSales: { $sum: { $multiply: ["$items.price", "$items.quantity"] } }
         }
       },
       { $sort: { totalQuantity: -1 } },
-      { $limit: 5 },
-      {
-        $lookup: {
-          from: "menuitems",
-          localField: "_id",
-          foreignField: "_id",
-          as: "item"
-        }
-      },
-      {
-        $unwind: "$item"
-      }
+      { $limit: 5 }
     ]);
 
     res.json(topItems);

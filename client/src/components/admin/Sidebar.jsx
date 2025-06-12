@@ -116,6 +116,21 @@ const Sidebar = () => {
           </NavLink>
         </li>
 
+         {/* Reports */}
+        <li>
+          <NavLink
+            to="/admin/reports"
+            className={({ isActive }) =>
+              isActive
+                ? "flex items-center space-x-4 p-3 rounded-lg bg-gray-700 transition-all"
+                : "flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-700 transition-all"
+            }
+          >
+            <i className="fas fa-chart-line text-xl"></i>
+            <span>Reports</span>
+          </NavLink>
+        </li>
+
        
 
         {/* Settings */}

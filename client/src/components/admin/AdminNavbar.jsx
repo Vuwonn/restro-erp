@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { setUser } from "@/redux/authSlice"; 
 import { USER_API_END_POINT } from "@/utils/constant";
+import { toast } from "react-toastify";
 
 const AdminNavbar = ({ toggleSidebar }) => {
   const { user } = useSelector((store) => store.auth);
@@ -30,11 +31,12 @@ const AdminNavbar = ({ toggleSidebar }) => {
   // Logout handler
   const handleLogout = async () => {
     try {
-      await axios.post(`${USER_API_END_POINT}/logout`, {}, { withCredentials: true });
-
-      dispatch(setUser(null)); // Clear user from Redux
-      navigate("/login"); // Redirect to login page
+      await axios.get(`${USER_API_END_POINT}/logout`, { withCredentials: true });
+      dispatch(setUser(null)); 
+      navigate("/login"); 
+      toast.success("Logged out successfully");
     } catch (error) {
+      toast.error("Logout failed. Please try again.");
       console.error("Logout failed:", error);
     }
   };
