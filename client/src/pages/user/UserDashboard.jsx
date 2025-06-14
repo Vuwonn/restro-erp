@@ -8,6 +8,7 @@ import {
   FiX,
 } from "react-icons/fi";
 import { Link, useNavigate } from "react-router-dom";
+import { MdMeetingRoom } from 'react-icons/md';
 import useCart from "@/hooks/custumer/useCart";
 import { useMenu } from "@/hooks/custumer/useMenu";
 import { useMobileMenu } from "@/hooks/custumer/useMobileMenu";
@@ -40,7 +41,6 @@ const UserDashboard = () => {
 
   // Mobile menu functionality
   const { isMobileMenuOpen, setIsMobileMenuOpen } = useMobileMenu();
-
 
   const handleProceedToCheckout = () => {
     navigate("/guest-order");
@@ -110,22 +110,30 @@ const UserDashboard = () => {
         <div className="md:hidden bg-white shadow-lg absolute z-20 w-full">
           <div className="container mx-auto px-4 py-3">
             <nav className="flex flex-col space-y-2">
-              <button className="flex items-center py-2 px-4 rounded-lg hover:bg-gray-100">
+              <button
+                className="flex items-center py-2 px-4 rounded-lg hover:bg-gray-100"
+                onClick={() => {
+                  navigate("/");
+                  setIsMobileMenuOpen(false);
+                }}
+              >
                 <FiHome className="mr-2" /> Home
               </button>
-                          <button className="flex items-center py-2 px-4 rounded-lg hover:bg-gray-100"
-                          onclick={() => {
-                            navigate("/rooms");
-                          }}
-                          >
+              <button
+                className="flex items-center py-2 px-4 rounded-lg hover:bg-gray-100"
+                onClick={() => {
+                  navigate("/rooms");
+                  setIsMobileMenuOpen(false);
+                }}
+              >
                 <FiHome className="mr-2" /> Rooms
               </button>
               {categories.length === 0 ? (
                 <p className="text-gray-500">No categories available</p>
               ) : (
-                categories.map((category) => (
+                categories.map((category, index) => (
                   <button
-                    key={category} // Assuming categories are unique strings
+                    key={`${category}-${index}`} // Fixed key
                     className={`flex items-center py-2 px-4 rounded-lg hover:bg-gray-100 ${
                       activeCategory === category
                         ? "text-indigo-600 font-medium bg-indigo-50"
@@ -155,7 +163,7 @@ const UserDashboard = () => {
             ) : (
               categories.map((category, index) => (
                 <button
-                  key={`${category}-${index}`} // Robust key with index
+                  key={`${category}-${index}`}
                   onClick={() => setActiveCategory(category)}
                   className={`px-3 py-1.5 md:px-4 md:py-2 rounded-full whitespace-nowrap text-sm md:text-base ${
                     activeCategory === category
@@ -184,7 +192,7 @@ const UserDashboard = () => {
           ) : (
             filteredItems.map((item) => (
               <div
-                key={item.id} // Assuming item.id is unique
+                key={item.id}
                 className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow"
               >
                 <div className="relative h-24 sm:h-28 md:h-36 lg:h-48 overflow-hidden">
@@ -344,7 +352,10 @@ const UserDashboard = () => {
       {/* Mobile Bottom Navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t border-gray-200 z-10">
         <div className="flex justify-around items-center py-3">
-          <button className="flex flex-col items-center text-indigo-600">
+          <button
+            className="flex flex-col items-center text-indigo-600"
+            onClick={() => navigate("/")}
+          >
             <FiHome size={20} />
             <span className="text-xs mt-1">Home</span>
           </button>
@@ -355,10 +366,11 @@ const UserDashboard = () => {
             <FiShoppingCart size={20} />
             <span className="text-xs mt-1">Cart</span>
           </button>
-          <button className="flex flex-col items-center text-gray-600">
-            <FiUser size={20} />
-            <span className="text-xs mt-1">Profile</span>
-          </button>
+          
+         <Link to="/rooms" className="flex flex-col items-center text-gray-600">
+      <MdMeetingRoom size={20} />
+      <span className="text-xs mt-1">Rooms</span>
+    </Link>
         </div>
       </div>
     </div>

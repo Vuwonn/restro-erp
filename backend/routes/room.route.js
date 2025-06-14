@@ -28,6 +28,9 @@ router.get("/:roomNumber", getRoomByNumber);
 // Check in to a room
 router.put("/checkin/:roomNumber", isAuthenticated, checkInRoom);
 
+// Book room as customer
+// router.put("/book/:roomNumber",bookRoomAsCustomer);
+
 // Check out of a room
 router.put("/checkout/:roomNumber", isAuthenticated, checkOutRoom);
 

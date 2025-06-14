@@ -342,3 +342,44 @@ export const deleteRoomPhoto = async (req, res) => {
     res.status(500).json({ message: "Internal server error", error: err.message });
   }
 };
+
+
+
+// Book a room as a customer
+// export const bookRoomAsCustomer = async (req, res) => {
+//   try {
+//     const { roomNumber } = req.params;
+//     const { customerName, contactNumber } = req.body;
+
+//     // Validate inputs
+//     if (!customerName || !contactNumber) {
+//       return res.status(400).json({ message: "Customer name and contact number are required." });
+//     }
+
+//     // Find the room by room number
+//     const room = await Room.findOne({ roomNumber });
+//     if (!room) return res.status(404).json({ message: "Room not found." });
+
+//     if (room.isBooked) {
+//       return res.status(400).json({ message: "Room is already booked." });
+//     }
+
+//     // Attach customer info and mark the room as booked
+//     room.isBooked = true;
+//     room.checkInDate = new Date();
+//     room.customerInfo = {
+//       name: customerName,
+//       contact: contactNumber,
+//     };
+
+//     await room.save();
+
+//     res.status(200).json({
+//       message: "Room booked successfully.",
+//       room,
+//     });
+//   } catch (err) {
+//     console.error("Error booking room:", err);
+//     res.status(500).json({ message: "Internal server error", error: err.message });
+//   }
+// };

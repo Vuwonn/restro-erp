@@ -33,6 +33,9 @@ import RoomManager from "./pages/admin/sidebarpage/RoomStats";
 import AdminPOSPage from "./pages/admin/sidebarpage/AdminPOSPage";
 import CheckoutPage from "./pages/admin/sidebarpage/Checkout";
 import Reports from "./pages/admin/sidebarpage/Reports";
+import RoomsList from "./pages/user/RoomList";
+import RoomDetails from "./pages/user/RoomDetails";
+import AdminRoomBookings from "./pages/admin/sidebarpage/RoomReservations";
 
 function App() {
   return (
@@ -47,6 +50,8 @@ function App() {
         <Route path="/guest-checkout" element={<GuestOrderPage />} />
         <Route path="/order" element={<GuestUserDashboard />} />
         <Route path="/active-orders" element={<ActiveOrder />} />
+        <Route path="/rooms" element={<RoomsList />} />
+        <Route path="/rooms/:roomNumber" element={<RoomDetails />} />
         
 
 
@@ -81,6 +86,7 @@ function App() {
           <Route path="reports" element={<Reports />} />
           <Route path="table-stats" element={<TableManager />} />
           <Route path="room-stats" element={<RoomManager />} />
+          <Route path="reservations" element={<AdminRoomBookings />} />
           <Route path="pos" element={<AdminPOSPage />} />
           <Route path="pos/checkout" element={<CheckoutPage />} />
           <Route path="settings" element={<Settings />} />

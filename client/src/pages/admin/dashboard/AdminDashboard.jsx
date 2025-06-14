@@ -86,12 +86,12 @@ const AdminDashboard = () => {
           />
           <StatCard
             title="Total sales today"
-            value={`$${totalRevenue || 0}`}
+            value={`Rs. ${totalRevenue || 0}`}
             icon="dollar-sign"
             color="green"
             loading={revenueLoading}
             error={revenueError}
-            link="/admin/revenue"
+            link="/admin/reports"
           />
           <StatCard
             title="Menu Items"
@@ -187,7 +187,7 @@ const AdminDashboard = () => {
             <h3 className="font-medium text-gray-700">View Reservations</h3>
             <p className="text-sm text-gray-500 text-center mt-1">Check upcoming bookings</p>
           </Link>
-        </div>
+        </div>uuuu
       </section>
     </div>
   );
