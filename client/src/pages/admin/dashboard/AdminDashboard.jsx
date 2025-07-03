@@ -4,13 +4,13 @@ import { Link } from "react-router-dom";
 import useKitchenStatus from "@/hooks/useKitchenStatus";
 import useStaffManagement from "@/hooks/useStaffManagement";
 import useOrderStats from "@/hooks/useOrderStats";
-import useTotalRevenue from "@/hooks/useTotalRevenue";
+import useDailySales from "@/hooks/useDailySales";
 import useTotalMenuItems from "@/hooks/useTotalMenuItems";
 import useTableStats from "@/hooks/useTableStats";
 
 const AdminDashboard = () => {
   const { totalOrders, loading: ordersLoading, error: ordersError } = useOrderStats();
-  const { totalRevenue, loading: revenueLoading, error: revenueError } = useTotalRevenue();
+  const { data: dailySales, loading: salesLoading, error: salesError } = useDailySales();
   const { totalMenuItems, loading: menuLoading, error: menuError } = useTotalMenuItems();
   const { kitchenStatus, loading: kitchenLoading, error: kitchenError } = useKitchenStatus();
   const { staffStatus, loading: staffLoading, error: staffError } = useStaffManagement();
@@ -76,7 +76,7 @@ const AdminDashboard = () => {
         <h2 className="text-lg font-semibold text-gray-700 mb-4">Key Metrics</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
-            title="Total Orders today"
+            title="Total Orders"
             value={totalOrders || 0}
             icon="shopping-bag"
             color="blue"
@@ -84,15 +84,16 @@ const AdminDashboard = () => {
             error={ordersError}
             link="/admin/orders"
           />
-          <StatCard
-            title="Total sales today"
-            value={`Rs. ${totalRevenue || 0}`}
-            icon="dollar-sign"
-            color="green"
-            loading={revenueLoading}
-            error={revenueError}
-            link="/admin/reports"
-          />
+        <StatCard
+  title="Total Sales Today"
+  value={`Rs. ${dailySales.totalSales || 0}`}
+  icon="dollar-sign"
+  color="green"
+  loading={salesLoading}
+  error={salesError}
+  link="/admin/reports"
+/>
+
           <StatCard
             title="Menu Items"
             value={totalMenuItems || 0}
@@ -118,7 +119,7 @@ const AdminDashboard = () => {
               { label: "Prepared Orders", value: kitchenStatus?.prepared || 0 },
             ]}
           />
-          <StatusCard
+          {/* <StatusCard
             title="Staff Management"
             loading={staffLoading}
             error={staffError}
@@ -126,7 +127,7 @@ const AdminDashboard = () => {
               { label: "Active Staff", value: staffStatus?.active || 0 },
               { label: "Total Staff", value: staffStatus?.total || 0 },
             ]}
-          />
+          /> */}
           <StatusCard
             title="Table Reservations"
             loading={tableStatsLoading}
@@ -155,7 +156,7 @@ const AdminDashboard = () => {
             <p className="text-sm text-gray-500 text-center mt-1">Create a new dish for your menu</p>
           </Link>
 
-          <Link
+          {/* <Link
             to="/admin/staff/add"
             className="bg-white p-6 rounded-xl shadow-sm border border-dashed border-gray-300 hover:border-green-500 hover:shadow-md transition-all flex items-center justify-center flex-col"
           >
@@ -164,7 +165,7 @@ const AdminDashboard = () => {
             </div>
             <h3 className="font-medium text-gray-700">Add Staff Member</h3>
             <p className="text-sm text-gray-500 text-center mt-1">Onboard new restaurant staff</p>
-          </Link>
+          </Link> */}
 
           {/* <Link
             to="/admin/inventory"
@@ -187,7 +188,7 @@ const AdminDashboard = () => {
             <h3 className="font-medium text-gray-700">View Reservations</h3>
             <p className="text-sm text-gray-500 text-center mt-1">Check upcoming bookings</p>
           </Link>
-        </div>uuuu
+        </div>
       </section>
     </div>
   );

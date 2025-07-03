@@ -54,7 +54,7 @@ const Sidebar = () => {
 
 
         {/* Staff Management */}
-        <li>
+        {/* <li>
           <NavLink
             to="/admin/staff"
             className={({ isActive }) =>
@@ -66,7 +66,7 @@ const Sidebar = () => {
             <i className="fas fa-users text-xl"></i>
             <span>Staff</span>
           </NavLink>
-        </li>
+        </li> */}
 
 
 
