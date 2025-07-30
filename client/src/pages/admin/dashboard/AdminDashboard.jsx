@@ -2,7 +2,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import useKitchenStatus from "@/hooks/useKitchenStatus";
-import useStaffManagement from "@/hooks/useStaffManagement";
+// import useStaffManagement from "@/hooks/useStaffManagement";
 import useOrderStats from "@/hooks/useOrderStats";
 import useDailySales from "@/hooks/useDailySales";
 import useTotalMenuItems from "@/hooks/useTotalMenuItems";
@@ -13,7 +13,7 @@ const AdminDashboard = () => {
   const { data: dailySales, loading: salesLoading, error: salesError } = useDailySales();
   const { totalMenuItems, loading: menuLoading, error: menuError } = useTotalMenuItems();
   const { kitchenStatus, loading: kitchenLoading, error: kitchenError } = useKitchenStatus();
-  const { staffStatus, loading: staffLoading, error: staffError } = useStaffManagement();
+  // const { staffStatus, loading: staffLoading, error: staffError } = useStaffManagement();
   const { stats: tableStats, loading: tableStatsLoading, error: tableStatsError } = useTableStats();
 
   const StatCard = ({ title, value, icon, color, loading, error, link }) => {

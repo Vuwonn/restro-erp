@@ -1,13 +1,14 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 
 const usePOSCart = () => {
   const [cart, setCart] = useState([]);
-  const [discountPercent, setDiscountPercent] = useState(0);
+  const [discount, setDiscount] = useState(0); // now absolute value
+  const [onlineAmount, setOnlineAmount] = useState(0);
   const [cashPaid, setCashPaid] = useState(0);
   const [creditAmount, setCreditAmount] = useState(0);
   const [customerName, setCustomerName] = useState('Guest');
-const [customerNumber, setCustomerNumber] = useState('');
-
+  const [customerNumber, setCustomerNumber] = useState('');
+  const [total, setTotal] = useState(0); // fixed total set externally
 
   const addToCart = (item) => {
     setCart((prevCart) => {
@@ -47,9 +48,11 @@ const [customerNumber, setCustomerNumber] = useState('');
 
   const clearCart = () => {
     setCart([]);
-    setDiscountPercent(0);
+    setDiscount(0);
     setCashPaid(0);
     setCreditAmount(0);
+    setOnlineAmount(0);
+    setTotal(0);
   };
 
   const subtotal = useMemo(
@@ -57,47 +60,42 @@ const [customerNumber, setCustomerNumber] = useState('');
     [cart]
   );
 
-  const discount = useMemo(
-    () => (subtotal * Math.min(discountPercent, 100)) / 100,
-    [subtotal, discountPercent]
-  );
-
-  const serviceCharge = useMemo(() => (subtotal - discount) * 0.1, [subtotal, discount]);
-
-  const total = useMemo(
-    () => subtotal - discount + serviceCharge - creditAmount,
-    [subtotal, discount, serviceCharge, creditAmount]
-  );
+  // Update credit amount automatically when other values change
+  useEffect(() => {
+    const calculatedCredit = total - (cashPaid + discount + onlineAmount);
+    setCreditAmount(calculatedCredit > 0 ? calculatedCredit : 0);
+  }, [cashPaid, discount, onlineAmount, total]);
 
   const change = useMemo(
-    () => (cashPaid > total ? cashPaid - total : 0).toFixed(2),
-    [cashPaid, total]
+    () => (cashPaid + discount + onlineAmount > total
+      ? (cashPaid + discount + onlineAmount - total).toFixed(2)
+      : 0),
+    [cashPaid, discount, onlineAmount, total]
   );
 
   return {
-  cart,
-  addToCart,
-  removeFromCart,
-  increaseQty,
-  decreaseQty,
-  clearCart,
-  subtotal,
-  discount,
-  discountPercent,
-  setDiscountPercent,
-  serviceCharge,
-  total,
-  cashPaid,
-  setCashPaid,
-  creditAmount,
-  setCreditAmount,
-  change,
-  customerName,
-  setCustomerName,
-  customerNumber,
-  setCustomerNumber,
-};
-
+    cart,
+    addToCart,
+    removeFromCart,
+    increaseQty,
+    decreaseQty,
+    clearCart,
+    subtotal,
+    discount,
+    setDiscount, // absolute amount
+    total,
+    setTotal, // set from UI
+    cashPaid,
+    setCashPaid,
+    creditAmount, // auto-calculated
+    onlineAmount,
+    setOnlineAmount,
+    change,
+    customerName,
+    setCustomerName,
+    customerNumber,
+    setCustomerNumber,
+  };
 };
 
 export default usePOSCart;

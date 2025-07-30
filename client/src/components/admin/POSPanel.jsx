@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+// POSPanel.jsx
+import React, { useMemo } from "react";
 import { useDispatch } from "react-redux";
 import { setPOSData } from "@/redux/posSlice";
 import { useNavigate } from "react-router-dom";
@@ -12,13 +13,11 @@ const POSPanel = ({
   onRemove,
   subtotal,
   discount,
-  discountPercent,
-  setDiscountPercent,
-  total,
+  setDiscount,
   cashPaid,
   setCashPaid,
-  creditAmount,
-  setCreditAmount,
+  onlineAmount,
+  setOnlineAmount,
   customerName,
   setCustomerName,
   customerNumber,
@@ -27,67 +26,70 @@ const POSPanel = ({
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
- const handleCheckout = async () => {
-  const onlineAmount = total - cashPaid - creditAmount;
+  const total = useMemo(() => subtotal - discount, [subtotal, discount]);
+  const creditAmount = useMemo(
+    () => Math.max(0, total - (cashPaid + onlineAmount)),
+    [total, cashPaid, onlineAmount]
+  );
+  const change = useMemo(
+    () => Math.max(0, cashPaid + onlineAmount - total),
+    [total, cashPaid, onlineAmount]
+  );
 
-  const payload = {
-    cart: cart.map((item) => ({
-      id: item.id,
-      name: item.name,
-      price: item.price,
-      quantity: item.quantity,
-    })),
-    total: total,
-    cash: cashPaid,
-    credit: creditAmount,
-    paymentMethod:
-      cashPaid && creditAmount
-        ? "mixed"
-        : cashPaid
-        ? "cash"
-        : creditAmount
-        ? "credit"
-        : "online",
-    orderType: "dine-in",
-    customerDetails: {
-      name: customerName || "Guest",
-      contact: customerNumber,
-    },
-  };
+  const paymentMethod =
+    cashPaid > 0 && onlineAmount > 0
+      ? "mixed"
+      : cashPaid > 0
+      ? "cash"
+      : onlineAmount > 0
+      ? "online"
+      : "credit";
 
+  const handleCheckout = async () => {
+    const payload = {
+      cart: cart.map((item) => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+      })),
+      total,
+      cash: cashPaid,
+      online: onlineAmount,
+      discount,
+      paymentMethod,
+      orderType: "dine-in",
+      customerName: customerName || "Guest",
+      customerNumber,
+      ...(creditAmount > 0 && { credit: creditAmount }),
+    };
 
-  try {
-    const res = await axios.post(
-      `${POS_API_END_POINT}/create-bill`,
-      payload,
-      {
+    try {
+      await axios.post(`${POS_API_END_POINT}/create-bill`, payload, {
         headers: { "Content-Type": "application/json" },
         withCredentials: true,
-      }
-    );
+      });
 
-    dispatch(
-      setPOSData({
-        cart,
-        subtotal,
-        discountPercent,
-        discount,
-        cash: cashPaid,
-        credit: creditAmount,
-        online: onlineAmount,
-        total,
-        customerName,
-        customerNumber,
-      })
-    );
+      dispatch(
+        setPOSData({
+          cart,
+          subtotal,
+          discount,
+          cash: cashPaid,
+          credit: creditAmount,
+          online: onlineAmount,
+          total,
+          customerName,
+          customerNumber,
+        })
+      );
 
-    navigate("/admin/pos/checkout");
-  } catch (err) {
-    console.error("❌ Failed to create POS entry:", err?.response?.data || err.message);
-    alert("Something went wrong while processing the order.");
-  }
-};
-
+      navigate("/admin/pos/checkout");
+    } catch (err) {
+      console.error("\u274C Failed to create POS entry:", err?.response?.data || err.message);
+      alert("Something went wrong while processing the order.");
+    }
+  };
 
   return (
     <div className="w-[300px] mx-auto p-4 font-mono text-sm bg-white">
@@ -101,7 +103,7 @@ const POSPanel = ({
                 <div className="flex-1">
                   <p>{item.name}</p>
                   <p className="text-xs">
-                    {item.quantity} × Rs. {item.price.toFixed(2)} = Rs.{" "}
+                    {item.quantity} × Rs. {item.price.toFixed(2)} = Rs. {" "}
                     {(item.price * item.quantity).toFixed(2)}
                   </p>
                 </div>
@@ -152,13 +154,12 @@ const POSPanel = ({
               />
             </div>
             <div>
-              <label className="text-xs">Discount (%):</label>
+              <label className="text-xs">Discount (Rs):</label>
               <input
                 type="number"
                 min="0"
-                max="100"
-                value={discountPercent}
-                onChange={(e) => setDiscountPercent(Number(e.target.value))}
+                value={discount}
+                onChange={(e) => setDiscount(Number(e.target.value))}
                 className="w-full p-1 border rounded"
               />
             </div>
@@ -174,17 +175,34 @@ const POSPanel = ({
               />
             </div>
             <div>
-              <label className="text-xs">Credit (Rs):</label>
+              <label className="text-xs">Online (Rs):</label>
               <input
                 type="number"
                 min="0"
                 step="0.01"
-                value={creditAmount}
-                onChange={(e) => setCreditAmount(Number(e.target.value))}
+                value={onlineAmount}
+                onChange={(e) => setOnlineAmount(Number(e.target.value))}
                 className="w-full p-1 border rounded"
               />
             </div>
-            <div className="flex justify-between font-bold">
+            <div>
+              <label className="text-xs font-bold">Auto Credit (Rs):</label>
+              <input
+                type="number"
+                value={creditAmount.toFixed(2)}
+                disabled
+                className="w-full p-1 border rounded bg-gray-100 text-gray-600"
+              />
+            </div>
+
+            {Number(change) > 0 && (
+              <div className="flex justify-between text-blue-600 font-bold pt-1">
+                <span>Change:</span>
+                <span>Rs. {change}</span>
+              </div>
+            )}
+
+            <div className="flex justify-between font-bold pt-2">
               <span>Total</span>
               <span>Rs. {total.toFixed(2)}</span>
             </div>

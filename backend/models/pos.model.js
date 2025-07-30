@@ -34,9 +34,13 @@ const PosSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  online: {
+    type: Number,
+    default: 0,
+  },
   paymentMethod: {
     type: String,
-    enum: ["cash", "card", "online", "upi", "wallet", "mixed"],
+    enum: ["cash", "card", "online", "upi", "wallet", "mixed", "credit"],
     default: "cash",
   },
   orderType: {

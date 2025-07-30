@@ -1,26 +1,26 @@
+import React, { useEffect } from 'react';
 import POSPanel from '@/components/admin/POSPanel';
 import { useMenu } from '@/hooks/custumer/useMenu';
 import usePOSCart from '@/hooks/usePOSCart';
-import React from 'react';
 
 const AdminPOSPage = () => {
   const {
     cart,
-    addToCart: originalAddToCart, // Rename original addToCart
+    addToCart: originalAddToCart,
     removeFromCart,
     increaseQty,
     decreaseQty,
     clearCart,
     subtotal,
     discount,
-    discountPercent,
-    setDiscountPercent,
-    serviceCharge,
+    setDiscount,
     total,
+    setTotal,
     cashPaid,
     setCashPaid,
     creditAmount,
-    setCreditAmount,
+    onlineAmount,
+    setOnlineAmount,
     change,
     customerName,
     setCustomerName,
@@ -39,12 +39,16 @@ const AdminPOSPage = () => {
     error,
   } = useMenu();
 
+  // Set total equal to subtotal by default
+  useEffect(() => {
+    setTotal(subtotal);
+  }, [subtotal, setTotal]);
+
   // Override addToCart to ensure unique item IDs
   const addToCart = (item) => {
-    console.log('Adding item:', { id: item.id, name: item.name }); // Debug log
     const itemWithId = {
       ...item,
-      id: item.id || `${item.name}-${Date.now()}`, // Fallback ID if item.id is missing
+      id: item.id || `${item.name}-${Date.now()}`, // Fallback ID
     };
     originalAddToCart(itemWithId);
   };
@@ -54,11 +58,11 @@ const AdminPOSPage = () => {
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-4xl mx-auto">
+    <div className="p-6 space-y-6 max-w-5xl mx-auto">
       <div>
         <h1 className="text-2xl font-bold mb-4">Menu</h1>
 
-        {/* 🔍 Search and Category Filter */}
+        {/* 🔍 Filter and Search */}
         <div className="flex gap-2 mb-4">
           <select
             value={activeCategory}
@@ -81,7 +85,7 @@ const AdminPOSPage = () => {
           />
         </div>
 
-        {/* 📦 Product Buttons with Images */}
+        {/* 🍽️ Menu Grid */}
         <div className="grid grid-cols-2 gap-4">
           {loading ? (
             <p>Loading menu...</p>
@@ -92,8 +96,8 @@ const AdminPOSPage = () => {
           ) : (
             filteredItems.map((item) => (
               <button
-                key={item.id || item.name} // Fallback to name if id is missing
-                onClick={() => addToCart(item)} // Use overridden addToCart
+                key={item.id || item.name}
+                onClick={() => addToCart(item)}
                 className="p-4 border rounded hover:bg-gray-100 text-left flex items-center gap-3"
               >
                 <img
@@ -111,6 +115,7 @@ const AdminPOSPage = () => {
         </div>
       </div>
 
+      {/* 🧾 Billing Panel */}
       <POSPanel
         cart={cart}
         onIncrease={increaseQty}
@@ -119,14 +124,13 @@ const AdminPOSPage = () => {
         onPrintBill={handlePrintBill}
         subtotal={subtotal}
         discount={discount}
-        discountPercent={discountPercent}
-        setDiscountPercent={setDiscountPercent}
-        serviceCharge={serviceCharge}
+        setDiscount={setDiscount}
         total={total}
         cashPaid={cashPaid}
         setCashPaid={setCashPaid}
         creditAmount={creditAmount}
-        setCreditAmount={setCreditAmount}
+        onlineAmount={onlineAmount}
+        setOnlineAmount={setOnlineAmount}
         change={change}
         customerName={customerName}
         setCustomerName={setCustomerName}

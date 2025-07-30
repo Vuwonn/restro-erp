@@ -36,6 +36,7 @@ import Reports from "./pages/admin/sidebarpage/Reports";
 import RoomsList from "./pages/user/RoomList";
 import RoomDetails from "./pages/user/RoomDetails";
 import AdminRoomBookings from "./pages/admin/sidebarpage/RoomReservations";
+import GetTotalByPaymentType from "./pages/admin/sidebarpage/GetTotalByPaymentType";
 
 function App() {
   return (
@@ -89,6 +90,7 @@ function App() {
           <Route path="reservations" element={<AdminRoomBookings />} />
           <Route path="pos" element={<AdminPOSPage />} />
           <Route path="pos/checkout" element={<CheckoutPage />} />
+          <Route path="get-total" element={<GetTotalByPaymentType />} />
           <Route path="settings" element={<Settings />} />
         </Route>
 
